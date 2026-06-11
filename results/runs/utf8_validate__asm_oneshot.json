@@ -1,0 +1,20 @@
+{
+ "kernel": "utf8_validate",
+ "tag": "asm_oneshot",
+ "source": "candidates/utf8_validate/asm_oneshot/round1.s",
+ "code_size": 398,
+ "public": {
+  "n_pass": 11,
+  "n_total": 11,
+  "all_pass": true,
+  "total_icount": 608,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 11,
+  "n_total": 11,
+  "all_pass": true,
+  "total_icount": 6161,
+  "failures": []
+ }
+}

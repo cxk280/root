@@ -1,0 +1,20 @@
+{
+ "kernel": "isqrt",
+ "tag": "c_O3",
+ "source": "candidates/isqrt/c/round1.c",
+ "code_size": 94,
+ "public": {
+  "n_pass": 11,
+  "n_total": 11,
+  "all_pass": true,
+  "total_icount": 2205,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 15,
+  "n_total": 15,
+  "all_pass": true,
+  "total_icount": 5920,
+  "failures": []
+ }
+}

@@ -1,0 +1,20 @@
+{
+ "kernel": "base64_encode",
+ "tag": "c_O3",
+ "source": "candidates/base64_encode/c/round1.c",
+ "code_size": 336,
+ "public": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 3326,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 103575,
+  "failures": []
+ }
+}

@@ -1,0 +1,20 @@
+{
+ "kernel": "memchr",
+ "tag": "asm_oneshot",
+ "source": "candidates/memchr/asm_oneshot/round1.s",
+ "code_size": 26,
+ "public": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 10462,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 7322,
+  "failures": []
+ }
+}

@@ -1,0 +1,20 @@
+{
+ "kernel": "rle_encode",
+ "tag": "c_Os",
+ "source": "candidates/rle_encode/c/round1.c",
+ "code_size": 161,
+ "public": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 11464,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 61798,
+  "failures": []
+ }
+}

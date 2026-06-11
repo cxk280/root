@@ -1,0 +1,6 @@
+{
+ "footprint": 88,
+ "synthase": [0, 16],
+ "membrane": [72, 16],
+ "note": "marker (offset 72, 0xA5*8) + self-described extent (offset 80) = the tail descriptor the organism reads each cycle to gate life and bound production; it is data, never executed."
+}

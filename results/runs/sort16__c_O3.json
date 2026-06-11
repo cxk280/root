@@ -1,0 +1,20 @@
+{
+ "kernel": "sort16",
+ "tag": "c_O3",
+ "source": "candidates/sort16/c/round1.c",
+ "code_size": 2554,
+ "public": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 3513,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 3898,
+  "failures": []
+ }
+}

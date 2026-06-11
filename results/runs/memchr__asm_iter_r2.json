@@ -1,0 +1,20 @@
+{
+ "kernel": "memchr",
+ "tag": "asm_iter_r2",
+ "source": "candidates/memchr/asm_iter/round2.s",
+ "code_size": 122,
+ "public": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 3215,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 2318,
+  "failures": []
+ }
+}
