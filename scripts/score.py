@@ -35,16 +35,21 @@ def record(kernel: str, tag: str, payload: dict) -> None:
              f"icount {hold['total_icount']:>8}  size {payload['code_size']}"))
 
 
+def _rel(src: Path) -> str:
+    """Repo-relative source path — keeps run records portable and host-agnostic."""
+    return str(Path(src).resolve().relative_to(config.REPO_ROOT))
+
+
 def build_and_score(kernel: str, src: Path, tag: str, opt: str) -> None:
     blob_dir = config.REPO_ROOT / "candidates" / kernel / "blobs" / tag
     try:
         assemble.build(src, blob_dir, opt=opt)
     except Exception as e:
-        record(kernel, tag, {"source": str(src), "build_error": str(e)})
+        record(kernel, tag, {"source": _rel(src), "build_error": str(e)})
         return
     blob = assemble.load_blob(blob_dir)
     record(kernel, tag, {
-        "source": str(src), "code_size": len(blob.code),
+        "source": _rel(src), "code_size": len(blob.code),
         "public": score(blob, load_vectors(kernel, "public")),
         "holdout": score(blob, load_vectors(kernel, "holdout")),
     })
