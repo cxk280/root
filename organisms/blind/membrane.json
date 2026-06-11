@@ -1,0 +1,6 @@
+{
+ "footprint": 33,
+ "synthase": [0, 16],
+ "membrane": null,
+ "note": "blind declares no membrane — honestly, it has none: it never reads its own state to condition behavior. The assay should therefore score it alive but low-closure."
+}

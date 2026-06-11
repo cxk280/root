@@ -1,0 +1,6 @@
+{
+ "footprint": 2,
+ "synthase": [0, 2],
+ "membrane": null,
+ "note": "an inert control: no membrane, no synthase that produces anything. Must die."
+}

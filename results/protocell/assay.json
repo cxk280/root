@@ -1,0 +1,403 @@
+{
+ "rock": {
+  "footprint": 2,
+  "survives": false,
+  "lifespan": 0,
+  "closure_score": 1,
+  "criteria": {
+   "1_identifiable_boundary": false,
+   "2_constitutive_components": false,
+   "3_mechanistic": true,
+   "4_boundary_self_produced": false,
+   "5_boundary_conditions_dynamics": false,
+   "6_closure_no_external_scaffold": false
+  },
+  "evidence": {
+   "membrane": {},
+   "synthase_matters": false,
+   "synthase_self_produced": false,
+   "external_reads": 0,
+   "phase_transition": {
+    "60": false,
+    "120": false,
+    "200": false,
+    "300": false,
+    "400": false,
+    "600": false,
+    "900": false,
+    "1400": false,
+    "2200": false,
+    "3500": false
+   }
+  },
+  "t_star_fine": null,
+  "mean_turnover": 0.0,
+  "mean_integrity": 0.0,
+  "phase_fine": {
+   "100": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "150": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "200": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "250": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "300": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "350": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "400": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "450": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "500": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "550": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "600": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "650": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "700": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "750": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "800": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "850": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "900": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "950": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   },
+   "1000": {
+    "survived": false,
+    "lifespan": 0,
+    "death": "no_turnover"
+   }
+  }
+ },
+ "blind": {
+  "footprint": 33,
+  "survives": true,
+  "lifespan": 120,
+  "closure_score": 2,
+  "criteria": {
+   "1_identifiable_boundary": false,
+   "2_constitutive_components": false,
+   "3_mechanistic": true,
+   "4_boundary_self_produced": false,
+   "5_boundary_conditions_dynamics": false,
+   "6_closure_no_external_scaffold": true
+  },
+  "evidence": {
+   "membrane": {},
+   "synthase_matters": true,
+   "synthase_self_produced": true,
+   "external_reads": 0,
+   "phase_transition": {
+    "60": false,
+    "120": false,
+    "200": false,
+    "300": false,
+    "400": false,
+    "600": true,
+    "900": true,
+    "1400": true,
+    "2200": true,
+    "3500": true
+   }
+  },
+  "t_star_fine": 500,
+  "mean_turnover": 96.0,
+  "mean_integrity": 1.0,
+  "phase_fine": {
+   "100": {
+    "survived": false,
+    "lifespan": 1,
+    "death": "fault:Invalid memory read (UC_ERR_READ_UNMAPPED)"
+   },
+   "150": {
+    "survived": false,
+    "lifespan": 1,
+    "death": "fault:Invalid memory read (UC_ERR_READ_UNMAPPED)"
+   },
+   "200": {
+    "survived": false,
+    "lifespan": 2,
+    "death": "fault:Invalid memory read (UC_ERR_READ_UNMAPPED)"
+   },
+   "250": {
+    "survived": false,
+    "lifespan": 2,
+    "death": "fault:Invalid memory read (UC_ERR_READ_UNMAPPED)"
+   },
+   "300": {
+    "survived": false,
+    "lifespan": 2,
+    "death": "fault:Invalid memory read (UC_ERR_READ_UNMAPPED)"
+   },
+   "350": {
+    "survived": false,
+    "lifespan": 3,
+    "death": "fault:Invalid memory read (UC_ERR_READ_UNMAPPED)"
+   },
+   "400": {
+    "survived": false,
+    "lifespan": 4,
+    "death": "fault:Invalid memory read (UC_ERR_READ_UNMAPPED)"
+   },
+   "450": {
+    "survived": false,
+    "lifespan": 7,
+    "death": "fault:Invalid memory read (UC_ERR_READ_UNMAPPED)"
+   },
+   "500": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "550": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "600": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "650": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "700": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "750": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "800": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "850": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "900": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "950": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "1000": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   }
+  }
+ },
+ "protocell0": {
+  "footprint": 88,
+  "survives": true,
+  "lifespan": 120,
+  "closure_score": 6,
+  "criteria": {
+   "1_identifiable_boundary": true,
+   "2_constitutive_components": true,
+   "3_mechanistic": true,
+   "4_boundary_self_produced": true,
+   "5_boundary_conditions_dynamics": true,
+   "6_closure_no_external_scaffold": true
+  },
+  "evidence": {
+   "membrane": {
+    "read": true,
+    "not_executed": true,
+    "rewritten": true,
+    "corruption_kills": true
+   },
+   "synthase_matters": true,
+   "synthase_self_produced": true,
+   "external_reads": 0,
+   "phase_transition": {
+    "60": false,
+    "120": false,
+    "200": false,
+    "300": false,
+    "400": false,
+    "600": true,
+    "900": true,
+    "1400": true,
+    "2200": true,
+    "3500": true
+   }
+  },
+  "t_star_fine": 500,
+  "mean_turnover": 88.0,
+  "mean_integrity": 1.0,
+  "phase_fine": {
+   "100": {
+    "survived": false,
+    "lifespan": 1,
+    "death": "fault:Invalid memory read (UC_ERR_READ_UNMAPPED)"
+   },
+   "150": {
+    "survived": false,
+    "lifespan": 1,
+    "death": "fault:Invalid memory read (UC_ERR_READ_UNMAPPED)"
+   },
+   "200": {
+    "survived": false,
+    "lifespan": 1,
+    "death": "fault:Invalid memory read (UC_ERR_READ_UNMAPPED)"
+   },
+   "250": {
+    "survived": false,
+    "lifespan": 1,
+    "death": "fault:Invalid memory read (UC_ERR_READ_UNMAPPED)"
+   },
+   "300": {
+    "survived": false,
+    "lifespan": 1,
+    "death": "fault:Invalid memory read (UC_ERR_READ_UNMAPPED)"
+   },
+   "350": {
+    "survived": false,
+    "lifespan": 1,
+    "death": "fault:Invalid memory read (UC_ERR_READ_UNMAPPED)"
+   },
+   "400": {
+    "survived": false,
+    "lifespan": 1,
+    "death": "fault:Invalid memory fetch (UC_ERR_FETCH_UNMAPPED)"
+   },
+   "450": {
+    "survived": false,
+    "lifespan": 4,
+    "death": "fault:Invalid memory fetch (UC_ERR_FETCH_UNMAPPED)"
+   },
+   "500": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "550": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "600": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "650": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "700": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "750": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "800": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "850": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "900": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "950": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   },
+   "1000": {
+    "survived": true,
+    "lifespan": 150,
+    "death": ""
+   }
+  }
+ }
+}

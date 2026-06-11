@@ -145,24 +145,72 @@ hold ourselves to that precise meaning rather than the romantic one.
 
 ## How this re-specifies the roadmap
 
-- **Milestone 1 (current) — the world + the synthesis capability.** The
+- **Milestone 1 (complete) — the world + the synthesis capability.** The
   falsification rig is unchanged in code but reframed in purpose: the sandbox is
   the *medium*, the fuel economy is its *thermodynamics*, and the C-vs-asm
-  benchmark answers the prerequisite question — *can an LLM author competent
-  machine code at all?* If it cannot, it cannot author a metabolism, and
-  autopoiesis is out of reach. M1 is the gate, not a detour.
-- **Phase 2 (was "evolutionary loop") — the protocell.** Build the smallest unity
-  that passes the six-point assay and shows the homeostasis phase transition: a
-  membrane-repair routine + a synthase + a fuel-capture routine, in machine code,
-  against decay. Author in-session; later, the hybrid engine proposes structural
-  variation. No fitness function.
-- **Phase 3 — structural coupling.** Perturb the medium (shifting nutrient
-  distribution, varying λ) and ask whether the unity compensates structurally
-  while conserving organization — and whether a self-specializing metabolism can
-  do things a compiler-frozen program cannot.
-- **Phase 4 — natural drift.** Many unities, one finite fuel pool, decay; observe
-  whether persistence-without-selection yields lineages. Visualization at that
-  point follows the global `VIEWS.md` + mock-approval rule.
+  benchmark answered the prerequisite question — *can an LLM author competent
+  machine code at all?* It can (`results/RESULTS.md`: 10/10 one-shot-correct,
+  competitive with `-O3`), so the gate to building a metabolism is open.
+
+### Phase 2 — the ladder of media (each rung assayed before the next)
+
+Phase 2 is **not** one organism; it is **one lineage walked up a ladder of
+increasingly lifelike decay**, assayed at every rung. Two rules govern the climb:
+
+1. **Carry the same organism forward — death is the data.** Each rung drops the
+   *unchanged* survivor of the previous rung into the harsher medium. If it dies,
+   the death *is* the measurement (it locates exactly what the new pressure
+   demands), and we then let the organism grow the structure that survives —
+   structural coupling made literal: structure changes so that organization is
+   conserved.
+2. **The stage-1 assay must enforce closure quality, not just survival.** The
+   solvent sweep can be "passed" by a degenerate organism that blindly rewrites
+   its whole body every tick — self-producing in the letter, brittle in spirit,
+   and certain to fall off a cliff at rung 2. So rung 1's assay scores the
+   six-point key (is the *boundary* doing work? is production *conditioned* on
+   self-state?), not just "did it live." Detecting the degenerate strategy is a
+   success of the assay, not a failure of the organism.
+
+The rungs:
+
+- **Rung 1 — solvent sweep (current target).** A background process reclaims any
+  byte not rewritten within the last *T* fuel-ticks. Forces continuous
+  self-production with the least machinery; fully deterministic, so one run is a
+  proof. **Assay:** six-point key + the homeostasis phase transition — survival
+  vs. *T*, with the threshold *T\** read off directly as the organism's metabolic
+  rate. *Goal:* the smallest unity that demonstrably lives, characterized
+  honestly on the closure spectrum.
+- **Rung 2 — stochastic bit-rot.** Random bit flips at rate λ; no freshness, no
+  sweep. Demands genuine **error detection and correction** (redundancy,
+  checksums, self-templating), not mere re-stamping. **Assay:** the
+  integrity-vs-λ curve and the critical λ\* (an error-catastrophe threshold);
+  nondeterministic, so seeded PRNG + many trials per λ. The rung-1 survivor is
+  expected to *die* here until it grows repair — the predicted, informative cliff.
+- **Rung 2.5 — starvation / foraging.** Orthogonal to corruption: running the
+  metabolism *costs* fuel that must be **captured from the medium**, and
+  exhaustion is death. This is the rung that introduces *outward behavior* — the
+  organism must act on its world to keep eating — and is the most direct route to
+  Maturana & Varela's structural coupling. **Assay:** does the unity forage and
+  hold a fuel homeostasis; does it couple its behavior to nutrient distribution.
+- **Rung 3 — layered.** Solvent boundary-turnover + low-rate component bit-rot +
+  starvation, under one fuel budget the organism must *allocate* across membrane
+  upkeep, interior repair, and foraging. **Assay:** the 2-D+ viability envelope —
+  interpretable only because each axis was characterized alone first.
+
+### Phase 3 — structural coupling at large
+
+Perturb a rung-3-viable organism's world (shifting nutrient fields, varying
+λ and *T*) and ask whether it compensates structurally while conserving
+organization — and whether a self-specializing metabolism does things a
+compiler-frozen program cannot (the `memchr` result of Milestone 1 is the first
+hint of that seam).
+
+### Phase 4 — natural drift
+
+Many unities, one finite fuel pool, decay; observe whether
+persistence-*without*-selection yields lineages — evolution as a *consequence* of
+autopoiesis, never an imposed engine. Visualization at that point follows the
+global `VIEWS.md` + mock-approval rule.
 
 Everything above is a commitment to a *standard*, not a promise of success: it is
 entirely possible the assay never goes fully affirmative. That failure would be

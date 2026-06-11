@@ -68,7 +68,8 @@ for _h in ("unicorn.h", "x86.h"):
     _parse_enums((_inc / _h).read_text(errors="replace"), CONST)
 
 for _needed in ("UC_ARCH_X86", "UC_MODE_64", "UC_PROT_READ", "UC_PROT_WRITE",
-                "UC_PROT_EXEC", "UC_HOOK_CODE", "UC_ERR_OK", "UC_X86_REG_RAX",
+                "UC_PROT_EXEC", "UC_HOOK_CODE", "UC_HOOK_MEM_WRITE",
+                "UC_HOOK_MEM_READ", "UC_ERR_OK", "UC_X86_REG_RAX",
                 "UC_X86_REG_RDI", "UC_X86_REG_RSP", "UC_X86_REG_RIP"):
     if _needed not in CONST:
         raise RuntimeError(f"failed to parse {_needed} from unicorn headers")
@@ -89,9 +90,13 @@ _lib.uc_close.argtypes = [ctypes.c_void_p]
 
 _CODE_CB = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_uint64,
                             ctypes.c_uint32, ctypes.c_void_p)
-# uc_hook_add is variadic; this prototype covers the UC_HOOK_CODE form we use.
+# uc_mem_hook callback: (uc, type, address, size, value, user_data)
+_MEM_CB = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_int,
+                           ctypes.c_uint64, ctypes.c_int, ctypes.c_int64,
+                           ctypes.c_void_p)
+# uc_hook_add is variadic; both prototypes below cover the forms we use.
 _lib.uc_hook_add.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_size_t),
-                             ctypes.c_int, _CODE_CB, ctypes.c_void_p,
+                             ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p,
                              ctypes.c_uint64, ctypes.c_uint64]
 
 
@@ -142,6 +147,22 @@ class Uc:
         hh = ctypes.c_size_t()
         _check(_lib.uc_hook_add(self._uc, ctypes.byref(hh), CONST["UC_HOOK_CODE"],
                                 cb, None, 1, 0))
+
+    def hook_mem_write(self, fn) -> None:
+        """fn(addr, size, value) for every memory write (the freshness signal)."""
+        cb = _MEM_CB(lambda _uc, _t, addr, size, value, _ud: fn(addr, size, value))
+        self._cbs.append(cb)
+        hh = ctypes.c_size_t()
+        _check(_lib.uc_hook_add(self._uc, ctypes.byref(hh),
+                                CONST["UC_HOOK_MEM_WRITE"], cb, None, 1, 0))
+
+    def hook_mem_read(self, fn) -> None:
+        """fn(addr, size) for every memory read (boundary-read provenance)."""
+        cb = _MEM_CB(lambda _uc, _t, addr, size, _value, _ud: fn(addr, size))
+        self._cbs.append(cb)
+        hh = ctypes.c_size_t()
+        _check(_lib.uc_hook_add(self._uc, ctypes.byref(hh),
+                                CONST["UC_HOOK_MEM_READ"], cb, None, 1, 0))
 
     def emu_start(self, begin: int, until: int, timeout_us: int, count: int) -> None:
         _check(_lib.uc_emu_start(self._uc, begin, until, timeout_us, count))
