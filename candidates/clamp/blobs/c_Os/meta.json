@@ -1,0 +1,14 @@
+{
+ "entry": 65536,
+ "code_size": 23,
+ "rodata_size": 0,
+ "source": "round1.c",
+ "flags": [
+  "-Os",
+  "-ffreestanding",
+  "-fno-builtin",
+  "-fno-stack-protector",
+  "-fno-asynchronous-unwind-tables"
+ ],
+ "sha256": "193a5a30966fd32156acf1118cfc093291876dba5de13724b1aa0669144e57f2"
+}

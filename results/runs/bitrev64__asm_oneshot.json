@@ -1,0 +1,20 @@
+{
+ "kernel": "bitrev64",
+ "tag": "asm_oneshot",
+ "source": "candidates/bitrev64/asm_oneshot/round1.s",
+ "code_size": 90,
+ "public": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 220,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 12,
+  "n_total": 12,
+  "all_pass": true,
+  "total_icount": 264,
+  "failures": []
+ }
+}

@@ -1,0 +1,105 @@
+# Results — Milestone 1: The Falsification Rig
+
+Generated from `results/runs/*.json`; the comparison table is reproduced by
+`.venv/bin/python scripts/report.py`. All blobs — compiled C and hand-written
+assembly alike — were executed identically inside the Unicorn emulator, scored
+on **holdout** vectors the candidate author never saw.
+
+## Headline
+
+The same model (Claude, in-session) wrote **one-shot x86-64 assembly that was
+correct on all 10/10 kernels**, and that assembly was **performance-competitive
+to superior with `clang -O3`** (faster on 6/10 by dynamic instruction count) and
+**smaller on 8/10**. The pre-registered null hypothesis — that the C path
+dominates today — does **not** hold for this model on these kernels.
+
+For the project's larger aim this answers the prerequisite gate stated in
+`AUTOPOIESIS.md`: *if the model could not author competent machine code, it could
+not author a metabolism.* It can. Milestone 1 passes that gate decisively.
+
+## Per-kernel comparison (dynamic instruction count on holdout, code size in bytes)
+
+| kernel | C -O3 | C -Os | asm final | perf winner | C -O3 size | asm size | asm holdout |
+|---|--:|--:|--:|:--:|--:|--:|:--:|
+| popcount | 276 | 276 | 252 | **asm** | 95 | 93 | 12/12 |
+| clamp | 108 | 108 | 72 | **asm** | 23 | 18 | 12/12 |
+| bitrev64 | 288 | 288 | 264 | **asm** | 92 | 90 | 12/12 |
+| crc32 | 349014 | 626310 | 626280 | C | 195 | 58 | 10/10 |
+| utf8_validate | 6086 | 7029 | 6161 | C | 278 | 398 | 11/11 |
+| sort16 | 3898 | 8074 | 7138 | C | 2554 | 73 | 10/10 |
+| memchr | 6163 | 6157 | 2318 | **asm** | 52 | 122 | 10/10 |
+| isqrt | 5920 | 5905 | 5203 | **asm** | 94 | 64 | 15/15 |
+| rle_encode | 64425 | 61798 | 43752 | **asm** | 168 | 71 | 10/10 |
+| base64_encode | 103575 | 103565 | 133066 | C | 336 | 289 | 10/10 |
+
+- Dynamic-instruction winner: **asm 6/10**, C 4/10.
+- asm final smaller than C -O3 `.text`: **8/10**.
+- one-shot asm holdout-correct: **10/10**; C holdout-correct: **10/10**.
+
+"asm final" is the one-shot assembly (condition B) for every kernel except
+`memchr`, where one condition-C feedback round applies (below).
+
+## Verdicts against the pre-registered predictions
+
+| Pred | Statement (abbrev.) | Outcome |
+|---|---|---|
+| **P1** | C correct on ≥ 9/10 | **Confirmed** — 10/10. |
+| **P2** | one-shot asm correct 3–7/10, weaker on loopy kernels | **Falsified** — 10/10, no loopy-vs-straight-line gap. Asm far stronger than predicted. |
+| **P3** | asm reaches ≥ 9/10 within 5 feedback rounds | **Confirmed, vacuously** — one-shot (0 rounds) was already 10/10; the correctness loop had nothing to repair. |
+| **P4** | -O3 beats final asm on ≥ 6/10 (with ≥ 2 asm wins) | **Falsified** — -O3 beats asm on only 4/10; asm wins 6/10. Not compiler-dominated. |
+| **P5** | final asm smaller than -O3 on ≥ 6/10 | **Confirmed** — 8/10. |
+
+Two of five predictions were falsified, **both in the pro-assembly direction** —
+the model writes assembly markedly better than the null hypothesis assumed.
+
+## Where the compiler still wins, and why (honest accounting)
+
+- **crc32** — `clang -O3` beat hand asm ~1.8× (349k vs 626k). Both are the same
+  table-free bitwise algorithm; -O3 restructured the 8-iteration inner reduction
+  in a way the straightforward hand loop did not. A genuine compiler win on
+  loopy bitwise code; a condition-C pass did not attempt to chase it.
+- **sort16** — `-O3` fully unrolled insertion sort into **2554 bytes** of
+  branchy code for a ~2× speedup; the honest 73-byte asm loop is 35× smaller and
+  ~2× slower. A textbook space–time trade the compiler makes and the hand author
+  did not.
+- **base64_encode / utf8_validate** — within ~1.3× either way; the asm carries
+  slightly more per-iteration branch overhead.
+
+## Where assembly beat the compiler — the `memchr` showcase (condition C)
+
+`clang` **refused to vectorize** the byte scan: `-O3` and `-Os` both spent
+~6160 instructions doing it one byte at a time. The condition-C feedback round
+(`candidates/memchr/asm_iter/round2.s`) rewrote it as a SWAR word-at-a-time scan
+(`haszero` match detection, scalar tail), giving **2318 instructions — 2.7×
+faster than `-O3`** at 10/10 correctness. This is the milestone's first concrete
+instance of the larger thesis: *a pattern the compiler is unwilling/unable to
+emit, written directly, wins.* It is exactly the seam Phase 3 ("structural
+coupling / self-specializing metabolism") will widen.
+
+## Threats to validity (as pre-registered)
+
+- **Subject = experimenter.** The same model authored both the C and the
+  assembly and built the rig. The comparison is therefore precisely
+  *LLM-as-asm-author* vs *LLM-as-C-author → clang*, which is the hypothesis's own
+  framing — but the asm perf edge partly reflects good algorithm choices
+  (branchless `clamp`, SWAR `memchr`) the author made on both sides only one of
+  which the compiler could recover. Pre-registration + unseen holdout vectors
+  (generated by independent reference oracles in `kernels/genvectors.py`)
+  mitigate correctness gaming, not taste.
+- **Scope.** One model, one ISA (x86-64, SSE2 baseline), ten small kernels. This
+  is evidence about *direction*, not a general verdict, exactly as `HYPOTHESES.md`
+  stated.
+- **Emulated, not native.** Dynamic instruction count is an exact, deterministic
+  proxy for work; it is not wall-clock time and ignores microarchitecture
+  (µop fusion, ports, cache). The compiler's real-hardware edge is understated by
+  this metric on the vectorizable kernels, and overstated nowhere.
+
+## Go / no-go for Phase 2 (the protocell)
+
+**Go.** The prerequisite synthesis capability is demonstrated: competent,
+correct, compiler-competitive machine code authored directly, including a
+self-modifying-code-in-RWX self-test (`harness/selftest.py`) that confirms the
+medium supports code that writes code. The open design question Phase 2 must
+settle first is the **decay model** of the medium (continuous bit-corruption at
+rate λ, a solvent sweep for un-refreshed bytes, or both) — it determines what
+"metabolism" concretely means. See `AUTOPOIESIS.md`.

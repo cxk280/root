@@ -1,0 +1,20 @@
+{
+ "kernel": "clamp",
+ "tag": "c_O3",
+ "source": "candidates/clamp/c/round1.c",
+ "code_size": 23,
+ "public": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 90,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 12,
+  "n_total": 12,
+  "all_pass": true,
+  "total_icount": 108,
+  "failures": []
+ }
+}

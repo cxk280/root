@@ -1,0 +1,20 @@
+{
+ "kernel": "utf8_validate",
+ "tag": "c_Os",
+ "source": "candidates/utf8_validate/c/round1.c",
+ "code_size": 261,
+ "public": {
+  "n_pass": 11,
+  "n_total": 11,
+  "all_pass": true,
+  "total_icount": 950,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 11,
+  "n_total": 11,
+  "all_pass": true,
+  "total_icount": 7029,
+  "failures": []
+ }
+}

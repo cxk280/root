@@ -1,0 +1,20 @@
+{
+ "kernel": "crc32",
+ "tag": "c_O3",
+ "source": "candidates/crc32/c/round1.c",
+ "code_size": 195,
+ "public": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 143983,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 349014,
+  "failures": []
+ }
+}

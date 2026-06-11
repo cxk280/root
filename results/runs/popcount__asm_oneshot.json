@@ -1,0 +1,20 @@
+{
+ "kernel": "popcount",
+ "tag": "asm_oneshot",
+ "source": "candidates/popcount/asm_oneshot/round1.s",
+ "code_size": 93,
+ "public": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 210,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 12,
+  "n_total": 12,
+  "all_pass": true,
+  "total_icount": 252,
+  "failures": []
+ }
+}

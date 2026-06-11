@@ -1,0 +1,20 @@
+{
+ "kernel": "base64_encode",
+ "tag": "asm_oneshot",
+ "source": "candidates/base64_encode/asm_oneshot/round1.s",
+ "code_size": 289,
+ "public": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 4186,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 133066,
+  "failures": []
+ }
+}

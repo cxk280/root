@@ -1,0 +1,20 @@
+{
+ "kernel": "crc32",
+ "tag": "asm_oneshot",
+ "source": "candidates/crc32/asm_oneshot/round1.s",
+ "code_size": 58,
+ "public": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 258289,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 626280,
+  "failures": []
+ }
+}

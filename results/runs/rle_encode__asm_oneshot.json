@@ -1,0 +1,20 @@
+{
+ "kernel": "rle_encode",
+ "tag": "asm_oneshot",
+ "source": "candidates/rle_encode/asm_oneshot/round1.s",
+ "code_size": 71,
+ "public": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 11828,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 43752,
+  "failures": []
+ }
+}

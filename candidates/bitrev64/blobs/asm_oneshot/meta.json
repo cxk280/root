@@ -1,0 +1,8 @@
+{
+ "entry": 65536,
+ "code_size": 90,
+ "rodata_size": 0,
+ "source": "round1.s",
+ "flags": [],
+ "sha256": "dba7882d01b0655843207021648af91b8f4e3e6199a932c7802399f1cdd2ed60"
+}

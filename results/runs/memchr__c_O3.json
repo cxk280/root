@@ -1,0 +1,20 @@
+{
+ "kernel": "memchr",
+ "tag": "c_O3",
+ "source": "candidates/memchr/c/round1.c",
+ "code_size": 52,
+ "public": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 8782,
+  "failures": []
+ },
+ "holdout": {
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "total_icount": 6163,
+  "failures": []
+ }
+}
