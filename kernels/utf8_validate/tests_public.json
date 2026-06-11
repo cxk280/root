@@ -1,0 +1,112 @@
+[
+ {
+  "args": [
+   "IN",
+   0
+  ],
+  "in": "",
+  "expect": {
+   "rax": 1
+  }
+ },
+ {
+  "args": [
+   "IN",
+   5
+  ],
+  "in": "68656c6c6f",
+  "expect": {
+   "rax": 1
+  }
+ },
+ {
+  "args": [
+   "IN",
+   13
+  ],
+  "in": "68c3a96c6c6f2077c3b6726c64",
+  "expect": {
+   "rax": 1
+  }
+ },
+ {
+  "args": [
+   "IN",
+   21
+  ],
+  "in": "e697a5e69cace8aa9ee38386e382ade382b9e38388",
+  "expect": {
+   "rax": 1
+  }
+ },
+ {
+  "args": [
+   "IN",
+   12
+  ],
+  "in": "f09f918df09f908df09f9a80",
+  "expect": {
+   "rax": 1
+  }
+ },
+ {
+  "args": [
+   "IN",
+   1
+  ],
+  "in": "80",
+  "expect": {
+   "rax": 0
+  }
+ },
+ {
+  "args": [
+   "IN",
+   2
+  ],
+  "in": "c080",
+  "expect": {
+   "rax": 0
+  }
+ },
+ {
+  "args": [
+   "IN",
+   3
+  ],
+  "in": "eda080",
+  "expect": {
+   "rax": 0
+  }
+ },
+ {
+  "args": [
+   "IN",
+   4
+  ],
+  "in": "f4908080",
+  "expect": {
+   "rax": 0
+  }
+ },
+ {
+  "args": [
+   "IN",
+   4
+  ],
+  "in": "6f6be282",
+  "expect": {
+   "rax": 0
+  }
+ },
+ {
+  "args": [
+   "IN",
+   2
+  ],
+  "in": "c2a2",
+  "expect": {
+   "rax": 1
+  }
+ }
+]
