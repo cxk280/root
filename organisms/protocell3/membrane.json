@@ -1,0 +1,6 @@
+{
+ "footprint": 256,
+ "synthase": [0, 16],
+ "membrane": [224, 8],
+ "note": "The layered organism (Rung 3): continuous identity-refresh self-production + tick-gated chemotaxis. Data after the code — pos@192, sensors@200, tick@204, membrane marker@224. The refresh re-lays the whole 256-byte body; fuel gates the per-window budget so starvation impairs repair."
+}

@@ -95,6 +95,23 @@ def main() -> int:
          (sweep_static.cause, sweep_static.harvests)),
     ]
 
+    # Layered (Rung 3): one organism under both pressures on one budget. It lives
+    # where it can afford both; dissolves when the budget can't self-produce;
+    # starves when the nutrient outruns it.
+    from .world import live_layered
+    lay = lambda T, v: live_layered(build_organism("protocell3"), T=T, footprint=256,
+                                    lifetime=180, food_speed=v, seed=1)
+    moderate, lowT, highV = lay(4000, 0.4), lay(700, 0.4), lay(4000, 1.8)
+    checks += [
+        ("protocell3 lives layered (self-produce + forage on one budget)",
+         moderate.survived and moderate.mean_integrity > 0.9, (moderate.survived,
+         round(moderate.mean_integrity, 2))),
+        ("layered: too small a budget -> dissolution (can't self-produce)",
+         not lowT.survived and lowT.cause == "dissolved", lowT.cause),
+        ("layered: nutrient outruns it -> starvation impairs repair -> death",
+         not highV.survived and highV.cause == "starved", highV.cause),
+    ]
+
     ok = True
     for name, passed, detail in checks:
         print(f"{'PASS' if passed else 'FAIL'}  {name}"
