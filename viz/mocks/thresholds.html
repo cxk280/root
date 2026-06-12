@@ -10,6 +10,7 @@ td.org{text-align:left;font-weight:600;}
 .yes{color:#66bb6a;} .no{color:#5a6373;}
 .score{font-weight:700;}
 .verdict{font-size:11px;color:var(--muted);}
+.charts h3{text-transform:none;letter-spacing:.2px;font-size:13px;color:#cdd3df;}
 .bars{display:flex;align-items:flex-end;gap:8px;height:150px;padding-top:10px;}
 .barpair{flex:1;display:flex;gap:3px;align-items:flex-end;height:100%;}
 .barpair i{flex:1;border-radius:3px 3px 0 0;}
@@ -54,13 +55,13 @@ td.org{text-align:left;font-weight:600;}
 const NS="http://www.w3.org/2000/svg";
 // three survival-vs-parameter charts
 const charts=[
-  {title:"T*  (solvent — survival vs sweep period)", crit:"T* = 500", critx:.5,
+  {title:"T*  ·  solvent — survival vs sweep period", crit:"T* = 500", critx:.5,
    series:[{c:"#66bb6a",pts:[[0,1],[.3,1],[.45,1],[.5,1],[.55,0],[.7,0],[1,0]].reverse()}]},
-  {title:"λ*  (bit-rot — survival vs flip rate)", crit:"λ* ≈ 0.04 → colony lifts", critx:.3,
+  {title:"λ*  ·  bit-rot — survival vs flip rate", crit:"λ* ≈ 0.04 → colony lifts", critx:.3,
    series:[{c:"#ef5350",pts:[[0,1],[.15,.4],[.3,0],[.6,0],[1,0]]},
            {c:"#f2c94c",pts:[[0,1],[.3,.6],[.5,.4],[.7,.1],[1,0]]},
            {c:"#66bb6a",pts:[[0,1],[.4,.7],[.6,.5],[.8,.25],[1,.1]]}]},
-  {title:"v*  (foraging — survival vs drift speed)", crit:"v* ≈ 1.2", critx:.6,
+  {title:"v*  ·  foraging — survival vs drift speed", crit:"v* ≈ 1.2", critx:.6,
    series:[{c:"#2dd4bf",pts:[[0,1],[.4,1],[.55,1],[.6,.9],[.72,0],[1,0]]},
            {c:"#5a6373",pts:[[0,0],[1,0]]}]}
 ];

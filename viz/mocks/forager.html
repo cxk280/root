@@ -29,8 +29,8 @@
     <!-- world -->
     <div class="panel overlay">
       <div class="hint" style="margin-bottom:8px">1-D world — 64 cells · gradient brighter near food</div>
-      <svg viewBox="0 0 780 220" height="240" id="world"></svg>
-      <div class="hint" style="margin-top:6px">forager trail (teal) holds to the nutrient trail (amber)</div>
+      <svg viewBox="0 0 780 300" height="300" id="world"></svg>
+      <div class="hint" style="margin-top:6px">below the strip: position over time — the forager (teal) hugs the food (amber)</div>
     </div>
 
     <!-- fuel & readout -->
@@ -62,29 +62,26 @@
 </div>
 
 <script>
-// 1-D world: 64 cells; food at 38, forager at 37 (tracking). Gradient falloff.
 const NS="http://www.w3.org/2000/svg", W=document.getElementById('world');
 const n=64, cw=780/n, food=38, pos=37;
-function rect(x,y,w,h,fill,extra){const r=document.createElementNS(NS,'rect');
-  r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);
-  r.setAttribute('fill',fill);if(extra)for(const k in extra)r.setAttribute(k,extra[k]);W.appendChild(r);}
-// gradient cells
-for(let i=0;i<n;i++){
-  const d=Math.abs(i-food), s=Math.max(0,1-d/14);
-  rect(i*cw+1,70,cw-2,40,`rgba(255,183,77,${0.08+0.5*s})`,{rx:2});
-}
-// food + forager markers
-rect(food*cw,66,cw,48,'var(--nutrient)',{rx:3});           // food
-rect(pos*cw,118,cw,14,'var(--fuel)',{rx:3});               // forager marker
-// trails (last ~30 windows) as polylines
-function trail(get,color,yb){let pts='';for(let t=0;t<30;t++){const x=(780/30)*t;
-  const v=get(t); pts+=`${x},${yb-v} `;}
-  const p=document.createElementNS(NS,'polyline');p.setAttribute('points',pts);
-  p.setAttribute('fill','none');p.setAttribute('stroke',color);p.setAttribute('stroke-width','1.6');p.setAttribute('opacity','.85');W.appendChild(p);}
-trail(t=>30+8*Math.sin(t/3),'rgba(255,183,77,.8)',60);     // food path
-trail(t=>30+8*Math.sin(t/3-0.5),'#2dd4bf',60);             // forager path (just behind)
-// axis hint
-const lab=document.createElementNS(NS,'text');lab.setAttribute('x',food*cw);lab.setAttribute('y',60);
-lab.setAttribute('fill','#ffb74d');lab.setAttribute('font-size','11');lab.setAttribute('text-anchor','middle');lab.textContent='food';W.appendChild(lab);
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return W.appendChild(e),e;}
+// --- spatial strip: chemical gradient cells (brighter near food) ---
+for(let i=0;i<n;i++){const d=Math.abs(i-food),s=Math.max(0,1-d/14);
+  el('rect',{x:i*cw+1,y:46,width:cw-2,height:44,rx:2,fill:`rgba(255,183,77,${0.08+0.5*s})`});}
+el('rect',{x:food*cw,y:42,width:cw,height:52,rx:3,fill:'var(--nutrient)'});        // food
+el('rect',{x:pos*cw,y:98,width:cw,height:14,rx:3,fill:'var(--fuel)'});             // forager marker
+el('text',{x:food*cw+cw/2,y:36,fill:'#ffb74d','font-size':11,'text-anchor':'middle'}).textContent='food';
+el('text',{x:pos*cw+cw/2,y:128,fill:'#2dd4bf','font-size':11,'text-anchor':'middle'}).textContent='forager';
+// --- position-over-time timeline, tied directly beneath the strip ---
+const T0=170,T1=284,xL=30,xR=772,m=44;
+el('line',{x1:xL,y1:T1,x2:xR,y2:T1,stroke:'#26304a','stroke-width':1});            // x axis (time)
+el('line',{x1:xL,y1:T0,x2:xL,y2:T1,stroke:'#26304a','stroke-width':1});            // y axis (position)
+el('text',{x:4,y:T0+9,fill:'#8b93a7','font-size':10}).textContent='pos';
+el('text',{x:xR-32,y:T1+15,fill:'#8b93a7','font-size':10}).textContent='time →';
+function track(fn,color,w){let p='';for(let t=0;t<m;t++){const x=xL+(xR-xL)*t/(m-1);
+  const y=T1-(T1-T0)*(fn(t)/64);p+=`${x},${y} `;}
+  el('polyline',{points:p,fill:'none',stroke:color,'stroke-width':w});}
+track(t=>34+9*Math.sin(t/4),'#ffb74d',2);            // food position over time
+track(t=>34+9*Math.sin(t/4-0.45),'#2dd4bf',1.8);     // forager hugging just behind
 </script>
 </body></html>
