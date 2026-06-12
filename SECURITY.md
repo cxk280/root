@@ -72,6 +72,7 @@ reaches anything, and the run is deterministic" is now *tested*, not assumed.
 | R4 | **Unattended autonomous evolution** (Phase 4 natural drift) does something unexpected over long horizons. | `containment/run.sh` runs the rig in a **no-network** (`--network none`), read-only, capability-dropped container with memory/cpu/pid caps; verified by `containment/selftest_all.py`. Human-in-the-loop on every merge (project rule). | **available (C4)** |
 | R5 | **Supply chain** (Unicorn/Capstone/toolchain). | `results/provenance.json` records Unicorn version + lib hash and the clang version; the in-repo `ctypes` shim avoids a PyPI binary for Unicorn (binds the system lib). | **done (C5)** |
 | R6 | **Nondeterminism leak** (e.g. `rdtsc`) undermines auditability. | `cpuid` trapped (C1); bit-rot seeded and the seed recorded; `rdtsc` documented (emulated counter, off every result path). | partial (C6) |
+| R7 | **Visualization surface** — the live visualizer runs the emulator in a long-lived server process (not the C2 isolated worker) so it can stream frames. | The C1 instruction traps stay active; the server binds `127.0.0.1` only and serves a fixed static dir + a closed control API (no arbitrary code from the browser). Safe for the curated demo organisms; for untrusted/evolved organisms run it inside the C4 container (`containment/run.sh python3 -m viz.server`). | **C7** — `viz/README.md` |
 
 ## Invariants (test-enforced)
 

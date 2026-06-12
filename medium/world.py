@@ -86,14 +86,17 @@ class Life:
 
 def live(code: bytes, T: int, lifetime: int = 200,
          body_hint: int | None = None, probe: bool = False,
-         decay: str = "solvent", lam: float = 0.0, seed: int = 0) -> Life:
+         decay: str = "solvent", lam: float = 0.0, seed: int = 0,
+         on_frame=None) -> Life:
     """Run one organism for up to `lifetime` windows under decay law `decay`.
 
     `code` is the birth image placed at ARENA_BASE; `body_hint` is its nominal
     footprint for integrity accounting (defaults to len(code)). With probe=True,
     accumulate execution/read/write provenance (offset sets) for the assay.
     For decay="bitrot", `lam` is the mean bit flips per window and `seed` makes
-    the corruption stream reproducible."""
+    the corruption stream reproducible. `on_frame`, if given, is called once per
+    window with a dict (body bytes, integrity, the offsets just decayed/written,
+    the execution head) for the live visualizer — opt-in, no behavior change."""
     footprint = body_hint if body_hint is not None else len(code)
     birth = code
     rng = random.Random(seed)
@@ -106,6 +109,8 @@ def live(code: bytes, T: int, lifetime: int = 200,
     exec_off, read_off, write_off = set(), set(), set()
     external_reads = [0]
 
+    written_now = set()                 # offsets the organism wrote this window (viz)
+
     def on_write(addr, size, _value):
         off = addr - ARENA_BASE
         for k in range(size):
@@ -115,6 +120,8 @@ def live(code: bytes, T: int, lifetime: int = 200,
                 writes_window[0] += 1
             if probe and 0 <= o < DECAY_BYTES:
                 write_off.add(o)
+            if on_frame is not None and 0 <= o < footprint:
+                written_now.add(o)
 
     def on_read(addr, size):
         off = addr - ARENA_BASE
@@ -145,7 +152,7 @@ def live(code: bytes, T: int, lifetime: int = 200,
         # read/exec provenance. Bit-rot survival sweeps run hookless — a ~10x
         # speedup — detecting death by fault/escape, which is how these organisms
         # actually die.
-        track_writes = decay == "solvent" or probe
+        track_writes = decay == "solvent" or probe or on_frame is not None
         if track_writes:
             mu.hook_mem_write(on_write)
         if probe:
@@ -157,6 +164,7 @@ def live(code: bytes, T: int, lifetime: int = 200,
         for i in range(lifetime):
             writes_window[0] = 0
             reads_self_window[0] = 0
+            written_now.clear()
             # run one inter-sweep window of T instructions
             try:
                 mu.emu_start(rip, ARENA_BASE + ARENA_SIZE, 0, T)  # count-bounded; no timer thread
@@ -166,11 +174,14 @@ def live(code: bytes, T: int, lifetime: int = 200,
                 cause = f"fault:forbidden_{mu.violation}"
             rip = mu.reg_read(reg("RIP"))
 
-            # the medium's decay law acts
+            # the medium's decay law acts; `decayed` records what it touched (viz)
+            decayed = []
             if not cause and decay == "solvent":
                 blank = bytearray(mu.mem_read(ARENA_BASE, DECAY_BYTES))
                 for o in range(DECAY_BYTES):
                     if not fresh[o]:
+                        if on_frame is not None and o < footprint and blank[o]:
+                            decayed.append(o)
                         blank[o] = 0
                 mu.mem_write(ARENA_BASE, bytes(blank))
             elif not cause and decay == "bitrot":
@@ -180,6 +191,7 @@ def live(code: bytes, T: int, lifetime: int = 200,
                     for _ in range(n):
                         o = rng.randrange(footprint)
                         region[o] ^= 1 << rng.randrange(8)   # flip one random bit
+                        decayed.append(o)
                     mu.mem_write(ARENA_BASE, bytes(region))
             if track_writes:
                 for o in range(DECAY_BYTES):
@@ -196,6 +208,13 @@ def live(code: bytes, T: int, lifetime: int = 200,
                 alive, cause = False, "no_turnover"      # stopped metabolizing
             elif not rip_in:
                 alive, cause = False, "rip_escaped"      # left its own body
+
+            if on_frame is not None:
+                on_frame({"w": i, "bytes": list(body), "integrity": integ,
+                          "turnover": writes_window[0],
+                          "decayed": decayed,
+                          "written": sorted(o for o in written_now if o < footprint),
+                          "rip": rip - ARENA_BASE, "alive": alive, "cause": cause})
 
             cycles.append(Cycle(i, writes_window[0], reads_self_window[0],
                                  integ, rip_in, alive, cause if not alive else ""))
@@ -223,7 +242,8 @@ class Colony:
 
 
 def live_colony(code: bytes, T: int, footprint: int, heads: list[int],
-                lifetime: int = 200, lam: float = 0.0, seed: int = 0) -> Colony:
+                lifetime: int = 200, lam: float = 0.0, seed: int = 0,
+                on_frame=None) -> Colony:
     """REDUNDANT EXECUTION (Rung 2.5): run several heads (independent program
     counters) over one shared, decaying genome, in alternating windows. Each head
     is a full majority-repairer; a head whose own code is corrupted FAULTS, but
@@ -289,6 +309,13 @@ def live_colony(code: bytes, T: int, footprint: int, heads: list[int],
                         o = rng.randrange(footprint)
                         region[o] ^= 1 << rng.randrange(8)
                     mu.mem_write(ARENA_BASE, bytes(region))
+            if on_frame is not None:
+                body = mu.mem_read(ARENA_BASE, footprint)
+                integ = sum(1 for a, b in zip(body, code) if a == b) / footprint
+                on_frame({"w": i, "bytes": list(body), "integrity": integ,
+                          "rips": [h["rip"] - ARENA_BASE if h["regs"] is not None
+                                   else h["entry"] - ARENA_BASE for h in state],
+                          "alive": ran_ok, "cause": "" if ran_ok else "all_heads_down"})
             if not ran_ok:
                 return Colony(len(heads), footprint, i, False, "all_heads_down")
         return Colony(len(heads), footprint, lifetime, True, "")
@@ -318,7 +345,7 @@ def _signal(p: int, food: int) -> int:
 
 def live_forage(code: bytes, T: int, lifetime: int = 300, *, food_speed: float = 1.0,
                 turn: float = 0.12, seed: int = 0, fuel0: int = 800, cost: int = 10,
-                reward: int = 25, harvest_radius: int = 1) -> Forage:
+                reward: int = 25, harvest_radius: int = 1, on_frame=None) -> Forage:
     """STRUCTURAL COUPLING / FORAGING (Rung 2.7). The organism lives only by
     keeping its fuel above zero: every window costs `cost` fuel, and it regains
     `reward` only when its position sits within `harvest_radius` of a nutrient
@@ -374,15 +401,22 @@ def live_forage(code: bytes, T: int, lifetime: int = 300, *, food_speed: float =
                 elif food >= WORLD_N:
                     food, direction = WORLD_N - 1, -direction
             errs.append(abs(pos - food))
-            if abs(pos - food) <= harvest_radius:
+            harvested = abs(pos - food) <= harvest_radius
+            if harvested:
                 fuel += reward
                 harvests += 1
             fuel -= cost
-            if fuel <= 0:
-                return Forage(False, i, "starved", _mean(errs), _mean(errs), harvests)
+            sensors = [_signal(pos + d, food) for d in (-1, 0, 1)]
             for d in (-1, 0, 1):                   # update what the organism can sense
-                mu.mem_write(ARENA_BASE + SENSE_OFF + d + 1,
-                             bytes([_signal(pos + d, food)]))
+                mu.mem_write(ARENA_BASE + SENSE_OFF + d + 1, bytes([sensors[d + 1]]))
+            dead = fuel <= 0
+            if on_frame is not None:
+                on_frame({"w": i, "pos": pos, "food": food, "sensors": sensors,
+                          "fuel": fuel, "harvest": harvested,
+                          "track_error": abs(pos - food), "harvests": harvests,
+                          "alive": not dead, "cause": "starved" if dead else ""})
+            if dead:
+                return Forage(False, i, "starved", _mean(errs), _mean(errs), harvests)
         return Forage(True, lifetime, "", fuel0, _mean(errs), harvests)
     finally:
         mu.close()
