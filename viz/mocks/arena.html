@@ -1,0 +1,81 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="mock.css">
+<title>Arena — mock</title></head><body>
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>Living Software <span class="badge">contained · local</span></div>
+    <div class="tabs"><div class="tab active">Arena</div><div class="tab">Forager</div><div class="tab">Thresholds</div><div class="tab">Overview</div></div>
+    <div class="transport"><div class="tbtn">▶</div><div class="tbtn">⏭</div><div class="speed"></div><span>2×</span></div>
+  </div>
+
+  <h1 class="view-title">Organism in its arena</h1>
+  <p class="caption">One organism, rebuilding its own body faster than the world erases it. — protocell1 (triple modular redundancy) under bit-rot.</p>
+
+  <div class="cols">
+    <!-- controls -->
+    <div class="panel">
+      <h3>Organism</h3>
+      <div class="field"><div class="select">protocell1 ▾</div>
+        <div class="hint" style="margin-top:6px">rock · blind · protocell0 · protocell1 · protocell2 · colony</div></div>
+      <h3>Decay law</h3>
+      <div class="seg" style="margin-bottom:14px"><span>Solvent</span><span class="on">Bit-rot</span></div>
+      <div class="field"><label>λ — mean flips / window</label>
+        <div class="slider"><div class="crit" style="left:40%"></div><div class="critlbl" style="left:40%">λ* ≈ 0.04</div><div class="knob" style="left:62%"></div></div>
+        <div class="hint">λ = 0.08 &nbsp;·&nbsp; above the error-catastrophe threshold</div>
+      </div>
+    </div>
+
+    <!-- arena -->
+    <div class="overlay">
+      <div class="arena" id="arena" style="grid-template-columns:repeat(24,16px)"></div>
+    </div>
+
+    <!-- vital signs -->
+    <div class="panel">
+      <h3>Vital signs</h3>
+      <div class="gauge"><span class="big">87</span><span class="unit">% integrity</span></div>
+      <div class="bar"><i style="width:87%;background:linear-gradient(90deg,#66bb6a,#2dd4bf)"></i></div>
+      <div style="margin-top:16px"><div class="hint" style="margin-bottom:4px">heartbeat — integrity & turnover</div>
+        <svg viewBox="0 0 240 64" height="64">
+          <polyline fill="none" stroke="#66bb6a" stroke-width="1.5" points="0,16 20,15 40,17 60,14 80,18 100,15 120,16 140,20 160,17 180,15 200,22 220,18 240,16"/>
+          <polyline fill="none" stroke="#2dd4bf" stroke-width="1.2" opacity=".7" points="0,40 20,38 40,42 60,39 80,41 100,38 120,40 140,37 160,41 180,39 200,43 220,40 240,39"/>
+        </svg>
+      </div>
+      <div class="readout">
+        <div class="k">window</div><div class="v">1,284</div>
+        <div class="k">integrity</div><div class="v">87%</div>
+        <div class="k">turnover</div><div class="v">480 B</div>
+        <div class="k">heads alive</div><div class="v">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:var(--code)"></i>code</span>
+    <span><i style="background:var(--membrane)"></i>membrane</span>
+    <span><i style="background:var(--data)"></i>data</span>
+    <span><i style="background:var(--zero);outline:1px solid #2c3450"></i>dissolved</span>
+    <span><i style="background:var(--decay)"></i>decay flash</span>
+    <span><i style="background:var(--repair)"></i>repair flash</span>
+    <span><i style="background:#0b0e14;outline:2px solid #fff"></i>execution head</span>
+  </div>
+</div>
+
+<script>
+// Representative static frame: protocell1 = 3 copies x 160 bytes = 480 cells.
+const A=document.getElementById('arena'), N=480;
+const rip=[24,184,344];                       // one execution head per copy
+const decay=new Set([211,212,377,98,455]);    // bytes just bit-flipped
+const repair=new Set([10,11,12,40,41,170,171,200,330,331,360,420,421]);
+for(let o=0;o<N;o++){
+  const loc=o%160; let c='var(--data)';
+  if(loc<52) c='var(--code)';
+  else if(loc>=72&&loc<88) c='var(--membrane)';
+  else if((loc*7+o)%11===0) c='var(--zero)';
+  const d=document.createElement('div'); d.className='cell'; d.style.background=c;
+  if(decay.has(o)){d.style.background='var(--decay)';d.style.boxShadow='0 0 6px var(--decay)';}
+  if(repair.has(o)){d.style.background='var(--repair)';d.style.boxShadow='0 0 6px var(--repair)';}
+  if(rip.includes(o)){d.style.outline='2px solid #fff';d.style.outlineOffset='-1px';}
+  A.appendChild(d);
+}
+</script>
+</body></html>

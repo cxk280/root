@@ -1,0 +1,71 @@
+/* Shared mock styling — the visual language from VIEWS.md. Static mocks only. */
+:root{
+  --bg:#0b0e14; --panel:#141925; --panel2:#1b2030; --line:#26304a;
+  --text:#e6e9ef; --muted:#8b93a7;
+  --code:#5b8def; --membrane:#f2c94c; --data:#5a6373; --zero:#1b2030;
+  --decay:#ef5350; --repair:#66bb6a; --fuel:#2dd4bf; --nutrient:#ffb74d;
+  --accent:#5b8def;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);
+  font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+.shell{max-width:1320px;margin:0 auto;padding:0 24px;}
+
+/* top bar */
+.topbar{display:flex;align-items:center;gap:20px;height:60px;border-bottom:1px solid var(--line);}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:.2px;}
+.brand .dot{width:10px;height:10px;border-radius:50%;background:var(--repair);box-shadow:0 0 10px var(--repair);}
+.badge{font-size:11px;color:#9fe3b0;border:1px solid #2e6b41;background:#11261a;
+  padding:2px 8px;border-radius:999px;}
+.tabs{display:flex;gap:4px;margin:0 auto;}
+.tab{padding:7px 14px;border-radius:8px;color:var(--muted);cursor:pointer;font-weight:500;}
+.tab.active{background:var(--panel);color:var(--text);box-shadow:inset 0 0 0 1px var(--line);}
+.transport{display:flex;align-items:center;gap:10px;color:var(--muted);}
+.tbtn{width:30px;height:30px;border-radius:7px;background:var(--panel);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;color:var(--text);}
+.speed{width:120px;height:4px;background:var(--panel2);border-radius:3px;position:relative;}
+.speed::after{content:"";position:absolute;left:46%;top:-4px;width:12px;height:12px;border-radius:50%;background:var(--accent);}
+
+/* view scaffold */
+h1.view-title{font-size:20px;margin:22px 0 2px;}
+.caption{color:var(--muted);margin:0 0 18px;}
+.cols{display:grid;grid-template-columns:230px 1fr 250px;gap:18px;align-items:start;}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;}
+.panel h3{margin:0 0 12px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
+.select{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--text);}
+.seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+.seg span{flex:1;text-align:center;padding:7px 0;color:var(--muted);font-size:13px;}
+.seg span.on{background:var(--accent);color:#fff;}
+.slider{height:6px;background:var(--panel2);border-radius:4px;position:relative;margin:34px 0 8px;}
+.slider .knob{position:absolute;top:-5px;width:16px;height:16px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(91,141,239,.18);}
+.slider .crit{position:absolute;top:-7px;width:2px;height:20px;background:var(--membrane);}
+.slider .critlbl{position:absolute;top:-23px;transform:translateX(-50%);font-size:10px;color:var(--membrane);white-space:nowrap;}
+.hint{font-size:11px;color:var(--muted);}
+
+/* gauges & readouts */
+.gauge{display:flex;align-items:baseline;gap:8px;margin-bottom:6px;}
+.gauge .big{font-size:34px;font-weight:700;}
+.gauge .unit{color:var(--muted);font-size:13px;}
+.bar{height:8px;background:var(--panel2);border-radius:5px;overflow:hidden;}
+.bar > i{display:block;height:100%;}
+.readout{display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin-top:12px;font-variant-numeric:tabular-nums;}
+.readout .k{color:var(--muted);} .readout .v{text-align:right;font-weight:600;}
+
+/* legend */
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px;}
+
+/* arena grid */
+.arena{display:grid;gap:2px;justify-content:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;}
+.cell{width:100%;aspect-ratio:1;border-radius:2px;}
+
+/* sparkline / charts use inline svg */
+svg{display:block;width:100%;}
+.overlay{position:relative;}
+.death{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(11,14,20,.62);border-radius:12px;}
+.death .card{background:#23121a;border:1px solid #6b2e3a;color:#ffb4b4;padding:14px 20px;border-radius:10px;text-align:center;}
+.death .card b{display:block;color:#fff;margin-bottom:3px;}

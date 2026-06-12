@@ -1,0 +1,100 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="mock.css">
+<title>Thresholds — mock</title>
+<style>
+.charts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px;}
+.lower{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th,td{padding:7px 8px;text-align:center;border-bottom:1px solid var(--line);}
+th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;}
+td.org{text-align:left;font-weight:600;}
+.yes{color:#66bb6a;} .no{color:#5a6373;}
+.score{font-weight:700;}
+.verdict{font-size:11px;color:var(--muted);}
+.bars{display:flex;align-items:flex-end;gap:8px;height:150px;padding-top:10px;}
+.barpair{flex:1;display:flex;gap:3px;align-items:flex-end;height:100%;}
+.barpair i{flex:1;border-radius:3px 3px 0 0;}
+.kgrid{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px;}
+</style></head><body>
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>Living Software <span class="badge">contained · local</span></div>
+    <div class="tabs"><div class="tab">Arena</div><div class="tab">Forager</div><div class="tab active">Thresholds</div><div class="tab">Overview</div></div>
+    <div class="transport"><span style="color:var(--muted)">recorded results</span></div>
+  </div>
+
+  <h1 class="view-title">Thresholds</h1>
+  <p class="caption">Three sharp edges of viability: boundary upkeep (T*), repair (λ*), and foraging (v*).</p>
+
+  <div class="charts" id="charts"></div>
+
+  <div class="lower">
+    <div class="panel">
+      <h3>Aliveness scorecard — Maturana &amp; Varela's six-point key</h3>
+      <table>
+        <tr><th class="org" style="text-align:left">organism</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>closure</th><th>verdict</th></tr>
+        <tr><td class="org">rock</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="score">1/6</td><td class="verdict">dead</td></tr>
+        <tr><td class="org">blind</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td><td class="score">2/6</td><td class="verdict">alive · no boundary</td></tr>
+        <tr><td class="org">protocell0</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="score">6/6</td><td class="verdict">autopoietic</td></tr>
+        <tr><td class="org">protocell1</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="score">6/6</td><td class="verdict">autopoietic · TMR</td></tr>
+        <tr><td class="org">protocell2</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="score">6/6</td><td class="verdict">autopoietic · TMR</td></tr>
+      </table>
+      <div class="hint" style="margin-top:8px">1 boundary · 2 components · 3 mechanistic · 4 self-produced boundary · 5 boundary conditions dynamics · 6 closure</div>
+    </div>
+
+    <div class="panel">
+      <h3>Milestone 1 — AI assembly vs clang ‑O3 (dynamic instructions)</h3>
+      <div class="bars" id="bars"></div>
+      <div class="kgrid" id="klabels"></div>
+      <div class="hint" style="margin-top:10px"><span style="color:#5b8def">■</span> C ‑O3 &nbsp; <span style="color:#66bb6a">■</span> AI asm &nbsp;·&nbsp; asm wins 6/10 speed, 8/10 size; one-shot 10/10 correct</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+// three survival-vs-parameter charts
+const charts=[
+  {title:"T*  (solvent — survival vs sweep period)", crit:"T* = 500", critx:.5,
+   series:[{c:"#66bb6a",pts:[[0,1],[.3,1],[.45,1],[.5,1],[.55,0],[.7,0],[1,0]].reverse()}]},
+  {title:"λ*  (bit-rot — survival vs flip rate)", crit:"λ* ≈ 0.04 → colony lifts", critx:.3,
+   series:[{c:"#ef5350",pts:[[0,1],[.15,.4],[.3,0],[.6,0],[1,0]]},
+           {c:"#f2c94c",pts:[[0,1],[.3,.6],[.5,.4],[.7,.1],[1,0]]},
+           {c:"#66bb6a",pts:[[0,1],[.4,.7],[.6,.5],[.8,.25],[1,.1]]}]},
+  {title:"v*  (foraging — survival vs drift speed)", crit:"v* ≈ 1.2", critx:.6,
+   series:[{c:"#2dd4bf",pts:[[0,1],[.4,1],[.55,1],[.6,.9],[.72,0],[1,0]]},
+           {c:"#5a6373",pts:[[0,0],[1,0]]}]}
+];
+const cw=380,ch=170,pad=28;
+charts.forEach(spec=>{
+  const wrap=document.createElement('div');wrap.className='panel';
+  wrap.innerHTML=`<h3 style="min-height:30px">${spec.title}</h3>`;
+  const svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox',`0 0 ${cw} ${ch}`);svg.setAttribute('height','150');
+  // axes
+  function line(x1,y1,x2,y2,c,w,dash){const l=document.createElementNS(NS,'line');
+    l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);
+    l.setAttribute('stroke',c);l.setAttribute('stroke-width',w||1);if(dash)l.setAttribute('stroke-dasharray',dash);svg.appendChild(l);}
+  line(pad,ch-pad,cw-8,ch-pad,'#26304a',1);line(pad,8,pad,ch-pad,'#26304a',1);
+  // critical line
+  const cx=pad+(cw-pad-12)*spec.critx;line(cx,8,cx,ch-pad,'#f2c94c',1.4,'4 3');
+  const ct=document.createElementNS(NS,'text');ct.setAttribute('x',cx+4);ct.setAttribute('y',20);
+  ct.setAttribute('fill','#f2c94c');ct.setAttribute('font-size','11');ct.textContent=spec.crit;svg.appendChild(ct);
+  spec.series.forEach(s=>{let pts='';s.pts.forEach(([x,y])=>{pts+=`${pad+(cw-pad-12)*x},${8+(ch-pad-8)*(1-y)} `;});
+    const p=document.createElementNS(NS,'polyline');p.setAttribute('points',pts);p.setAttribute('fill','none');
+    p.setAttribute('stroke',s.c);p.setAttribute('stroke-width','2');svg.appendChild(p);});
+  // y label
+  const yl=document.createElementNS(NS,'text');yl.setAttribute('x',6);yl.setAttribute('y',14);
+  yl.setAttribute('fill','#8b93a7');yl.setAttribute('font-size','10');yl.textContent='survival';svg.appendChild(yl);
+  wrap.appendChild(svg);document.getElementById('charts').appendChild(wrap);
+});
+// benchmark bars (10 kernels) C-O3 vs asm (log-ish heights, representative)
+const K=[["popcount",276,252],["clamp",108,72],["bitrev",288,264],["crc32",349,626],["utf8",6.1,6.2],
+        ["sort16",3.9,7.1],["memchr",6.2,2.3],["isqrt",5.9,5.2],["rle",64,44],["b64",104,133]];
+const bars=document.getElementById('bars'),kl=document.getElementById('klabels');
+const mx=Math.max(...K.flatMap(k=>[Math.log10(k[1]+2),Math.log10(k[2]+2)]));
+K.forEach(k=>{const d=document.createElement('div');d.className='barpair';
+  const h1=Math.log10(k[1]+2)/mx*100,h2=Math.log10(k[2]+2)/mx*100;
+  d.innerHTML=`<i style="height:${h1}%;background:#5b8def"></i><i style="height:${h2}%;background:#66bb6a"></i>`;
+  bars.appendChild(d);
+  const s=document.createElement('span');s.textContent=k[0];kl.appendChild(s);});
+</script>
+</body></html>
