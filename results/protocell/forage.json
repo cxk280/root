@@ -1,0 +1,86 @@
+{
+ "speeds": [
+  0.0,
+  0.5,
+  0.8,
+  1.0,
+  1.2,
+  1.5,
+  2.0
+ ],
+ "seeds": 12,
+ "chemotaxis": {
+  "0.0": {
+   "survived": 12,
+   "of": 12,
+   "track_error": 0.0
+  },
+  "0.5": {
+   "survived": 12,
+   "of": 12,
+   "track_error": 0.5
+  },
+  "0.8": {
+   "survived": 12,
+   "of": 12,
+   "track_error": 0.78
+  },
+  "1.0": {
+   "survived": 12,
+   "of": 12,
+   "track_error": 0.99
+  },
+  "1.2": {
+   "survived": 11,
+   "of": 12,
+   "track_error": 2.3
+  },
+  "1.5": {
+   "survived": 0,
+   "of": 12,
+   "track_error": 4.23
+  },
+  "2.0": {
+   "survived": 0,
+   "of": 12,
+   "track_error": 6.48
+  }
+ },
+ "sweep": {
+  "0.0": {
+   "survived": 0,
+   "of": 12,
+   "track_error": 15.28
+  },
+  "0.5": {
+   "survived": 0,
+   "of": 12,
+   "track_error": 15.43
+  },
+  "0.8": {
+   "survived": 0,
+   "of": 12,
+   "track_error": 15.57
+  },
+  "1.0": {
+   "survived": 0,
+   "of": 12,
+   "track_error": 16.58
+  },
+  "1.2": {
+   "survived": 0,
+   "of": 12,
+   "track_error": 17.86
+  },
+  "1.5": {
+   "survived": 0,
+   "of": 12,
+   "track_error": 17.82
+  },
+  "2.0": {
+   "survived": 0,
+   "of": 12,
+   "track_error": 18.11
+  }
+ }
+}

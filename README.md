@@ -67,16 +67,30 @@ the first few rungs of that ladder, built carefully and tested honestly.
   bit flips at rate λ). Carried forward unchanged, `protocell0` dies at every λ —
   its identity copy propagates corruption. `protocell1` grows **triple modular
   redundancy** (three copies, per-byte bitwise-majority repair) and raises the
-  error-catastrophe threshold λ\* **~4–5×**. The gain is capped by the executing
-  copy's own code (the "who repairs the repairer" limit). (`results/protocell/RUNG2.md`.)
+  error-catastrophe threshold λ\* **~4–5×**, capped by the executing copy's own
+  code (the "who repairs the repairer" limit). (`results/protocell/RUNG2.md`.)
+- ✅ **Phase 2, Rung 2.5 — lifting the cap with redundant execution.** Dilution
+  (bigger redundant body) raises λ\* as the germ's share of the body falls; the
+  real fix is a **colony** of several heads (independent program counters) over
+  one shared genome — **2 heads survive corruption rates flatly lethal to a single
+  head**, because a head whose code is corrupted is repaired by another before it
+  runs. Two heads beat three: a spontaneous **division of labor** (executing heads
+  + a quiescent reference copy). (`results/protocell/RUNG2B.md`.)
+- ✅ **Phase 2, Rung 2.7 — foraging & structural coupling.** The first rung with
+  outward *behavior*: a fuel economy where the organism starves unless it tracks a
+  drifting nutrient by climbing a chemical gradient (Maturana & Varela's
+  chemotaxing bacterium, in machine code). `forager0` (chemotaxis) survives up to
+  a bandwidth **v\* ≈ 1.2 steps/window**; the non-sensing `forager_sweep` starves
+  at every speed. Sensing, not motion, is what makes it foraging.
+  (`results/protocell/RUNG2C.md`.)
 - ✅ **Safety hardening.** Containment is first-class: privileged instructions
   trap (C1), all organism emulation runs in an isolated resource-capped worker
   (C2), the toolchain is pinned/recorded (C5), and the whole rig runs inside a
   **no-network, read-only, capability-dropped container** (C4) verified to hold
   its walls. (`SECURITY.md`.)
-- ⬜ **Next — Rung 2.5 (foraging) / fixing the SPOF.** Execution rotation or a
-  minimal repair primer to lift the redundancy cap; then metabolism that must
-  capture fuel from the medium.
+- ⬜ **Next — Rung 3 (layered) / Phase 4 (natural drift).** Layer self-production +
+  error correction + foraging under one fuel budget; then many heads sharing and
+  repairing genomes — the colony is already a minimal multicellular unity.
 
 ## Repository layout
 
@@ -99,14 +113,14 @@ kernels/<name>/         spec + public/holdout test vectors for 10 micro-kernels
 candidates/<kernel>/    AI-written C and assembly sources (built blobs are gitignored)
 
 medium/                 the living medium (Phase 2)
-  world.py              solvent + bit-rot decay laws: continuous execution + decay
+  world.py              solvent + bit-rot decay; live() single + live_colony() heads
   assay.py              the six-point aliveness key, applied by intervention
   build.py  selftest.py
-organisms/<name>/       organism.s + membrane.json
-                        (rock, blind, protocell0; protocell1 = TMR error correction)
+organisms/<name>/       organism.s (+ membrane.json). rock, blind, protocell0;
+                        protocell1/2 = TMR error correction; forager0/sweep = chemotaxis
 
-scripts/                score.py (benchmark), report.py (table), life.py (assay)
-results/                RESULTS.md, protocell/RESULTS.md (rung 1), protocell/RUNG2.md
+scripts/                score.py, report.py, life.py, redundancy.py, forage.py
+results/                RESULTS.md; protocell/RESULTS.md, RUNG2.md, RUNG2B.md, RUNG2C.md
 ```
 
 ## Quick start

@@ -8,7 +8,7 @@ import sys
 
 from .assay import assay
 from .build import build_organism
-from .world import live
+from .world import live, live_colony, live_forage
 
 
 def main() -> int:
@@ -48,6 +48,53 @@ def main() -> int:
         ("no external scaffold consulted (closure by construction)",
          cell.evidence["external_reads"] == 0, cell.evidence["external_reads"]),
     ]
+
+    # Redundant error correction (Rung 2): a TMR organism is full-closure when the
+    # assay ablates components across ALL copies, and survives bit-rot.
+    tmr = assay("protocell2", build_organism("protocell2"), T_live=8000, lifetime=80)
+    checks += [
+        ("protocell2 (TMR) is full-closure 6/6 via all-copy ablation",
+         tmr.closure_score == 6, tmr.closure_score),
+        ("TMR membrane survives a single-copy hit but all-copy corruption kills",
+         tmr.evidence["membrane"]["corruption_kills"], None),
+    ]
+
+    # Redundant EXECUTION (Rung 2.5): a colony of heads over a shared genome breaks
+    # the single-PC SPOF — it survives a corruption rate that kills the single head.
+    c2 = build_organism("protocell2")
+    colony_clean = live_colony(c2, T=8000, footprint=480, heads=[0, 160],
+                               lifetime=120, lam=0.0)
+    single_dead = sum(live(c2, T=8000, lifetime=120, body_hint=480, decay="bitrot",
+                           lam=0.16, seed=s).survived for s in range(8))
+    colony_alive = sum(live_colony(c2, T=8000, footprint=480, heads=[0, 160],
+                                   lifetime=120, lam=0.16, seed=s).survived
+                       for s in range(8))
+    checks += [
+        ("colony of 2 heads survives with no decay (register contexts isolated)",
+         colony_clean.survived, colony_clean.cause),
+        ("redundant execution lifts the cap: colony outlives single head at lethal lambda",
+         colony_alive > single_dead, (single_dead, colony_alive)),
+    ]
+
+    # Foraging / structural coupling (Rung 2.7): chemotaxis tracks a moving
+    # nutrient and lives; non-sensing motion starves. There is a drift-speed
+    # bandwidth v* below which the forager survives and above which it starves.
+    f0, fsweep = build_organism("forager0"), build_organism("forager_sweep")
+    chemo_slow = live_forage(f0, T=10000, lifetime=300, food_speed=0.8, seed=0)
+    chemo_fast = sum(live_forage(f0, T=10000, lifetime=300, food_speed=2.0, seed=s).survived
+                     for s in range(6))
+    sweep_static = live_forage(fsweep, T=10000, lifetime=300, food_speed=0.0, seed=0)
+    checks += [
+        ("chemotaxis tracks a moving nutrient and lives (v < v*)",
+         chemo_slow.survived and chemo_slow.track_error < 2.0,
+         (chemo_slow.survived, round(chemo_slow.track_error, 1))),
+        ("foraging has a bandwidth v*: chemotaxis starves when food outruns it",
+         chemo_fast == 0, chemo_fast),
+        ("non-sensing motion is not foraging: the sweep control starves",
+         not sweep_static.survived and sweep_static.cause == "starved",
+         (sweep_static.cause, sweep_static.harvests)),
+    ]
+
     ok = True
     for name, passed, detail in checks:
         print(f"{'PASS' if passed else 'FAIL'}  {name}"
