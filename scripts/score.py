@@ -97,3 +97,5 @@ if __name__ == "__main__":
                 run(k, cond)
     else:
         run(a.kernel, a.condition)
+    from harness import provenance
+    provenance.write()                       # stamp the toolchain (C5)

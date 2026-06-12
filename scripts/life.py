@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from harness import config                       # noqa: E402
+from harness import config, provenance           # noqa: E402
 from harness.isolation import isolated_call      # noqa: E402
 from medium.build import build_organism          # noqa: E402
 
@@ -34,6 +34,7 @@ def main():
               f"{str(rec['t_star_fine']):>5s} {rec['mean_turnover']:9.0f} "
               f"{rec['mean_integrity']:6.2f}")
     (OUT / "assay.json").write_text(json.dumps(records, indent=1))
+    provenance.write()                       # stamp the toolchain (C5)
     print(f"\nwrote {OUT/'assay.json'}")
     return records
 

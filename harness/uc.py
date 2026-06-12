@@ -87,6 +87,19 @@ _lib.uc_emu_start.argtypes = [ctypes.c_void_p, ctypes.c_uint64, ctypes.c_uint64,
                               ctypes.c_uint64, ctypes.c_size_t]
 _lib.uc_emu_stop.argtypes = [ctypes.c_void_p]
 _lib.uc_close.argtypes = [ctypes.c_void_p]
+_lib.uc_version.restype = ctypes.c_uint
+_lib.uc_version.argtypes = [ctypes.POINTER(ctypes.c_uint), ctypes.POINTER(ctypes.c_uint)]
+
+
+def version() -> str:
+    """Installed libunicorn version (for provenance/pinning)."""
+    mj, mn = ctypes.c_uint(), ctypes.c_uint()
+    _lib.uc_version(ctypes.byref(mj), ctypes.byref(mn))
+    return f"{mj.value}.{mn.value}"
+
+
+def lib_path() -> str:
+    return str(_find("lib"))
 
 _CODE_CB = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_uint64,
                             ctypes.c_uint32, ctypes.c_void_p)

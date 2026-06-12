@@ -56,34 +56,35 @@ Probing the guest sandbox (`harness/sandbox.py`) directly:
 | `syscall` | **executes as a no-op** — does *not* reach the host kernel |
 | `rdtsc` | executes (emulated counter; no host access) |
 
-The faults confirm the memory and control-flow walls hold. The `syscall` result
-is the actionable finding: it cannot reach the host (Unicorn emulates the CPU; it
-is not a hypervisor with syscall passthrough), but it is currently **not
-explicitly trapped** — we lean on Unicorn's default instead of enforcing the
-invariant. **Hardening item C1** closes this by trapping `syscall`/`sysenter` to a
-fault and asserting it in a containment self-test, so "no privileged/OS
-instructions reach anything" becomes tested, not assumed.
+The faults confirm the memory and control-flow walls hold. The `syscall` finding
+(originally an emulated no-op) is now **closed by C1**: `syscall`/`sysenter`/
+`cpuid` are trapped to a fault by default in the Unicorn shim, and
+`harness/containment.py` asserts it (11/11 checks). "No privileged/OS instruction
+reaches anything, and the run is deterministic" is now *tested*, not assumed.
 
 ## Residual risks and controls
 
 | # | Risk | Control | Status |
 |---|---|---|---|
-| R1 | **Emulator implementation bug** (Unicorn ← QEMU TCG lineage) lets crafted guest code corrupt/execute in the *host process*. | Run emulation in an **isolated worker process** under an OS sandbox (memory/CPU rlimits, no network, read-only FS except a results dir, no child processes, no core dumps). Pin & record the Unicorn version. So even a full emulator escape lands in a process that can do nothing. | **planned (C2)** |
-| R2 | Escaped code inherits the **host user's privileges**. | Worker drops to least privilege; the surrounding room is empty (R1 controls). | planned (C2) |
-| R3 | **Resource exhaustion / runaway** across many runs or large populations. | Hard caps: fuel + wall-clock + lifetime (in place); add memory rlimit, total-runtime budget, population-size and disk-write caps. | partial → C3 |
-| R4 | **Unattended autonomous evolution** (Phase 4 natural drift) does something unexpected over long horizons. | Run autonomous phases in a **no-network container/VM**, ephemeral FS, kill-switch + max-wallclock, human checkpoint cadence; never on a host with sensitive access. Human-in-the-loop on every merge (already a project rule). | at that phase (C4) |
-| R5 | **Supply chain** (Unicorn/Capstone/toolchain). | Pin and record versions + hashes in run records; the in-repo `ctypes` shim avoids a PyPI binary for Unicorn (binds the system lib). | ongoing (C5) |
-| R6 | **Nondeterminism leak** (e.g. `rdtsc`) undermines auditability. | Note in records; optionally trap/zero such instructions in a deterministic-mode hook. | tracked (C6) |
+| R1 | **Emulator implementation bug** (Unicorn ← QEMU TCG lineage) lets crafted guest code corrupt/execute in the *host process*. | Emulation runs in an **isolated worker process** (`harness/isolation.py`): bounded CPU time + wall-clock, no core dumps, bounded address space (Linux), few fds; a worker that dies/hangs/escapes is contained, not propagated. Network/FS hard-walling comes from the container (C4). | **done (C2)** — `isolation_selftest` |
+| R2 | Escaped code inherits the **host user's privileges**. | Worker is disposable and resource-clamped; full privilege-drop + empty room is the container (C4). | partial (C2) → C4 |
+| R3 | **Resource exhaustion / runaway** across many runs or large populations. | Hard caps in force: fuel + wall-clock + lifetime per run; worker CPU/mem/fsize rlimits. Population-size budget added at the population phase. | **enforced** |
+| R4 | **Unattended autonomous evolution** (Phase 4 natural drift) does something unexpected over long horizons. | Run autonomous phases in a **no-network container/VM**, ephemeral FS, kill-switch + max-wallclock, human checkpoint cadence; never on a host with sensitive access. Human-in-the-loop on every merge (already a project rule). | planned (C4) |
+| R5 | **Supply chain** (Unicorn/Capstone/toolchain). | `results/provenance.json` records Unicorn version + lib hash and the clang version; the in-repo `ctypes` shim avoids a PyPI binary for Unicorn (binds the system lib). | **done (C5)** |
+| R6 | **Nondeterminism leak** (e.g. `rdtsc`) undermines auditability. | `cpuid` trapped (C1); bit-rot seeded and the seed recorded; `rdtsc` documented (emulated counter, off every result path). | partial (C6) |
 
-## Invariants (to be test-enforced by a containment self-test)
+## Invariants (test-enforced)
 
-1. Guest memory writes/reads/fetches outside the mapped arena **fault**.
-2. Guest cannot map memory or invoke any OS facility; `syscall`/`sysenter`/`int`
-   **fault** (after C1) — no host call path exists.
-3. Every run terminates within fuel + wall-clock bounds.
-4. Runs are bit-for-bit reproducible from (organism, medium, T, λ, seed).
-5. Emulation runs in a process that itself has no network and no writable FS
-   outside a designated results dir (after C2).
+Enforced today by `harness/containment.py` (C1) and `harness/isolation_selftest.py` (C2):
+
+1. Guest memory writes/reads/fetches outside the mapped arena **fault**. ✅
+2. Guest cannot map memory or invoke any OS facility; `syscall`/`sysenter`/
+   `cpuid`/`int` **fault** — no host call path exists. ✅ (C1)
+3. Every run terminates within fuel + wall-clock bounds; a hung/crashed/runaway
+   worker is contained and the orchestrator survives. ✅ (C2)
+4. Runs are bit-for-bit reproducible from (organism, medium, T, λ, seed). ✅
+5. Emulation runs in a separate, resource-clamped process. ✅ (C2) — network and
+   writable-FS hard-walling is added by the container (C4, planned).
 
 ## Operating rules
 
