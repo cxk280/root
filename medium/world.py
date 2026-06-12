@@ -1,22 +1,39 @@
-"""Rung 1 of the autopoiesis ladder: the SOLVENT-SWEEP medium.
+"""The autopoiesis ladder's medium — Rungs 1 and 2.
 
 An organism is a flat machine-code body resident in a decaying arena. It runs
-continuously; every T fuel-ticks a *solvent sweep* zeroes every byte of the
-arena that was not written since the previous sweep. To persist, the organism
-must keep re-laying its own bytes faster than the solvent dissolves them — there
-is no external master copy, so this is genuine organizational closure in the
-computational medium (see AUTOPOIESIS.md).
+continuously; after each window of T fuel-ticks the medium applies a decay law:
 
-The medium produces a TRACE (per-cycle writes, integrity, boundary reads, RIP)
-that the assay (medium/assay.py) scores against Maturana & Varela's six-point
-key and the homeostasis phase transition. The medium itself renders no verdict;
-it only runs the physics and records what happened.
+  - "solvent" (Rung 1): zero every arena byte not written since the last sweep.
+    Survival demands continuous re-laying of one's own bytes. Deterministic.
+  - "bitrot"  (Rung 2): flip a Poisson(λ) number of random bits within the
+    organism's footprint, with no sweep. Survival demands error *correction* —
+    detecting and repairing damage, which an identity-copy refresh cannot do.
+    Seeded per trial; vary the seed for survival statistics.
+
+There is no external master copy in either mode (the medium maps no immortal
+data region), so persistence is genuine organizational closure in the
+computational medium (see AUTOPOIESIS.md). The medium produces a TRACE and
+renders no verdict; the assay (medium/assay.py) does that.
 """
 
+import random
 from dataclasses import dataclass, field
 
 from harness import config
 from harness.uc import CONST, Uc, UcError, reg
+
+
+def _poisson(rng: random.Random, lam: float) -> int:
+    """Knuth's algorithm — number of bit flips this window (mean λ)."""
+    if lam <= 0:
+        return 0
+    import math
+    el, k, p = math.exp(-lam), 0, 1.0
+    while True:
+        k += 1
+        p *= rng.random()
+        if p <= el:
+            return k - 1
 
 ARENA_BASE = config.CODE_BASE          # 0x10000, RWX — code that writes code is the point
 ARENA_SIZE = config.CODE_SIZE
@@ -68,14 +85,18 @@ class Life:
 
 
 def live(code: bytes, T: int, lifetime: int = 200,
-         body_hint: int | None = None, probe: bool = False) -> Life:
-    """Run one organism in the solvent medium for up to `lifetime` sweeps.
+         body_hint: int | None = None, probe: bool = False,
+         decay: str = "solvent", lam: float = 0.0, seed: int = 0) -> Life:
+    """Run one organism for up to `lifetime` windows under decay law `decay`.
 
     `code` is the birth image placed at ARENA_BASE; `body_hint` is its nominal
     footprint for integrity accounting (defaults to len(code)). With probe=True,
-    accumulate execution/read/write provenance (offset sets) for the assay."""
+    accumulate execution/read/write provenance (offset sets) for the assay.
+    For decay="bitrot", `lam` is the mean bit flips per window and `seed` makes
+    the corruption stream reproducible."""
     footprint = body_hint if body_hint is not None else len(code)
     birth = code
+    rng = random.Random(seed)
     R, W, X = CONST["UC_PROT_READ"], CONST["UC_PROT_WRITE"], CONST["UC_PROT_EXEC"]
 
     mu = Uc()
@@ -136,15 +157,23 @@ def live(code: bytes, T: int, lifetime: int = 200,
                 cause = f"fault:{e}"
             rip = mu.reg_read(reg("RIP"))
 
-            # the solvent acts: reclaim every un-refreshed arena byte
-            if not cause:
+            # the medium's decay law acts
+            if not cause and decay == "solvent":
                 blank = bytearray(mu.mem_read(ARENA_BASE, DECAY_BYTES))
                 for o in range(DECAY_BYTES):
                     if not fresh[o]:
                         blank[o] = 0
                 mu.mem_write(ARENA_BASE, bytes(blank))
-                for o in range(DECAY_BYTES):
-                    fresh[o] = 0
+            elif not cause and decay == "bitrot":
+                n = _poisson(rng, lam)
+                if n:
+                    region = bytearray(mu.mem_read(ARENA_BASE, footprint))
+                    for _ in range(n):
+                        o = rng.randrange(footprint)
+                        region[o] ^= 1 << rng.randrange(8)   # flip one random bit
+                    mu.mem_write(ARENA_BASE, bytes(region))
+            for o in range(DECAY_BYTES):
+                fresh[o] = 0
 
             body = mu.mem_read(ARENA_BASE, footprint)
             integ = sum(1 for a, b in zip(body, birth) if a == b) / footprint
