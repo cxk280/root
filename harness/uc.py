@@ -17,21 +17,31 @@ _SEARCH_PREFIXES = [
     Path("/usr/local"),
     Path("/usr"),
 ]
+# lib subdirectories to search under each prefix (macOS + Linux multiarch)
+_LIB_DIRS = ("lib", "lib64", "lib/x86_64-linux-gnu", "lib/aarch64-linux-gnu")
+_LIB_GLOBS = ("libunicorn.dylib", "libunicorn*.dylib",
+              "libunicorn.so", "libunicorn.so.*")
 
 
 def _find(kind: str) -> Path:
-    for p in _SEARCH_PREFIXES:
-        if kind == "lib":
-            for name in ("libunicorn.dylib", "libunicorn.2.dylib", "libunicorn.so"):
-                c = p / "lib" / name
-                if c.exists():
-                    return c
-        else:
+    if kind != "lib":
+        for p in _SEARCH_PREFIXES:
             c = p / "include" / "unicorn"
             if (c / "unicorn.h").exists():
                 return c
-    raise RuntimeError(
-        f"libunicorn {kind} not found; install with `brew install unicorn`")
+        raise RuntimeError("unicorn headers not found; install libunicorn-dev "
+                           "(Linux) or `brew install unicorn` (macOS)")
+    for p in _SEARCH_PREFIXES:
+        for d in _LIB_DIRS:
+            for pat in _LIB_GLOBS:
+                hits = sorted((p / d).glob(pat)) if (p / d).is_dir() else []
+                if hits:
+                    return hits[-1]
+    found = ctypes.util.find_library("unicorn")   # linker fallback (Linux)
+    if found:
+        return Path(found)
+    raise RuntimeError("libunicorn not found; install libunicorn-dev (Linux) "
+                       "or `brew install unicorn` (macOS)")
 
 
 def _parse_enums(header_text: str, into: dict) -> None:
@@ -65,7 +75,9 @@ def _parse_enums(header_text: str, into: dict) -> None:
 _inc = _find("include")
 CONST: dict = {}
 for _h in ("unicorn.h", "x86.h"):
-    _parse_enums((_inc / _h).read_text(errors="replace"), CONST)
+    _hp = _inc / _h
+    if _hp.exists():
+        _parse_enums(_hp.read_text(errors="replace"), CONST)
 
 for _needed in ("UC_ARCH_X86", "UC_MODE_64", "UC_PROT_READ", "UC_PROT_WRITE",
                 "UC_PROT_EXEC", "UC_HOOK_CODE", "UC_HOOK_MEM_WRITE",
@@ -87,6 +99,19 @@ _lib.uc_emu_start.argtypes = [ctypes.c_void_p, ctypes.c_uint64, ctypes.c_uint64,
                               ctypes.c_uint64, ctypes.c_size_t]
 _lib.uc_emu_stop.argtypes = [ctypes.c_void_p]
 _lib.uc_close.argtypes = [ctypes.c_void_p]
+_lib.uc_version.restype = ctypes.c_uint
+_lib.uc_version.argtypes = [ctypes.POINTER(ctypes.c_uint), ctypes.POINTER(ctypes.c_uint)]
+
+
+def version() -> str:
+    """Installed libunicorn version (for provenance/pinning)."""
+    mj, mn = ctypes.c_uint(), ctypes.c_uint()
+    _lib.uc_version(ctypes.byref(mj), ctypes.byref(mn))
+    return f"{mj.value}.{mn.value}"
+
+
+def lib_path() -> str:
+    return str(_find("lib"))
 
 _CODE_CB = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_uint64,
                             ctypes.c_uint32, ctypes.c_void_p)
@@ -94,10 +119,25 @@ _CODE_CB = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_uint64,
 _MEM_CB = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_int,
                            ctypes.c_uint64, ctypes.c_int, ctypes.c_int64,
                            ctypes.c_void_p)
-# uc_hook_add is variadic; both prototypes below cover the forms we use.
+# Instruction-hook callback for syscall/sysenter/cpuid: (uc, user_data)
+_INSN_CB = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p)
+# uc_hook_add is variadic; the 7-arg form below covers code/mem hooks.
 _lib.uc_hook_add.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_size_t),
                              ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p,
                              ctypes.c_uint64, ctypes.c_uint64]
+# A second prototype to the SAME symbol for the 8-arg UC_HOOK_INSN form
+# (trailing instruction id) — keeps the variadic call well-typed.
+_HOOKADD_INSN = ctypes.CFUNCTYPE(
+    ctypes.c_int, ctypes.c_void_p, ctypes.POINTER(ctypes.c_size_t),
+    ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p,
+    ctypes.c_uint64, ctypes.c_uint64, ctypes.c_int)(
+    ctypes.cast(_lib.uc_hook_add, ctypes.c_void_p).value)
+
+# Privileged / OS / nondeterministic instructions trapped by default (C1/C6).
+# None of these can reach the host (Unicorn emulates the CPU), but trapping them
+# turns "no OS path, deterministic" from an assumption into an enforced, tested
+# invariant. See SECURITY.md.
+_TRAPPED_INSNS = ("UC_X86_INS_SYSCALL", "UC_X86_INS_SYSENTER", "UC_X86_INS_CPUID")
 
 
 class UcError(Exception):
@@ -114,11 +154,31 @@ def _check(err: int) -> None:
 class Uc:
     """The slice of the Unicorn API the rig uses."""
 
-    def __init__(self):
+    def __init__(self, trap_privileged: bool = True):
         self._uc = ctypes.c_void_p()
         _check(_lib.uc_open(CONST["UC_ARCH_X86"], CONST["UC_MODE_64"],
                             ctypes.byref(self._uc)))
         self._cbs = []  # keep callback objects alive for the engine's lifetime
+        self.violation = None   # set if the guest executed a trapped instruction
+        if trap_privileged:
+            self._install_insn_traps()
+
+    def _install_insn_traps(self) -> None:
+        """Fault on syscall/sysenter/cpuid — enforce 'no OS path, deterministic'
+        as a tested invariant rather than relying on the emulator's default."""
+        for name in _TRAPPED_INSNS:
+            insn_id = CONST[name]
+
+            def _trap(_uc, _ud, _n=name):
+                self.violation = _n.replace("UC_X86_INS_", "").lower()
+                _lib.uc_emu_stop(self._uc)
+
+            cb = _INSN_CB(_trap)
+            self._cbs.append(cb)
+            hh = ctypes.c_size_t()
+            _check(_HOOKADD_INSN(self._uc, ctypes.byref(hh), CONST["UC_HOOK_INSN"],
+                                 ctypes.cast(cb, ctypes.c_void_p), None, 1, 0,
+                                 insn_id))
 
     def mem_map(self, addr: int, size: int, perms: int) -> None:
         _check(_lib.uc_mem_map(self._uc, addr, size, perms))

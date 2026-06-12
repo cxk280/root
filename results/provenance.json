@@ -1,0 +1,16 @@
+{
+ "unicorn_version": "2.1",
+ "unicorn_lib": "/usr/local/opt/unicorn/lib/libunicorn.dylib",
+ "unicorn_sha256_16": "e360246943ced244",
+ "clang_version": "Apple clang version 15.0.0 (clang-1500.1.0.2.5)",
+ "fuel_cap": 2000000,
+ "wall_timeout_us": 20000000,
+ "determinism": {
+  "solvent_medium": "deterministic",
+  "bitrot_medium": "seeded PRNG (seed recorded per run)",
+  "trapped_for_determinism": [
+   "cpuid"
+  ],
+  "residual_note": "rdtsc executes (emulated counter); not on any result path, see SECURITY.md C6"
+ }
+}

@@ -1,0 +1,8 @@
+{
+ "replicate": 3,
+ "body_len": 160,
+ "footprint": 480,
+ "synthase": [0, 16],
+ "membrane": [128, 16],
+ "note": "Triple modular redundancy: three byte-identical 160-byte copies. The membrane (marker at 128 + extent at 136) and synthase exist in every copy; ablating a component requires damaging ALL copies, since a single-copy hit is repaired by majority vote. The assay applies its interventions at offset + k*160 for k in 0..2."
+}

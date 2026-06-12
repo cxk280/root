@@ -74,6 +74,10 @@ def run_vector(blob: LoadedObject, args: list, in_bytes: bytes = b"",
         except UcError as e:
             return RunResult(status=f"fault:{e}", icount=counter[0], fault=str(e))
 
+        if mu.violation:                      # trapped a privileged instruction
+            return RunResult(status=f"fault:forbidden_{mu.violation}",
+                             icount=counter[0], fault=mu.violation)
+
         icount = counter[0]
         if mu.reg_read(reg("RIP")) != config.HALT_ADDR:
             status = "fuel_exhausted" if icount >= fuel else "timeout"

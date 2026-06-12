@@ -63,10 +63,20 @@ the first few rungs of that ladder, built carefully and tested honestly.
   (Maturana & Varela's six-point key, applied by intervention) scores it **6/6**,
   ranks a degenerate look-alike at 2/6 and an inert control at 1/6, and measures a
   sharp metabolic phase transition at **T\* = 500**. (`results/protocell/RESULTS.md`.)
-- ⬜ **Next — Rung 2 (bit-rot).** Carry `protocell0` unchanged into a medium of
-  random corruption and watch it die: its identity-copy refresh can't fix damage
-  it can't detect. That death locates the error-correcting structure the next
-  organism must grow.
+- ✅ **Phase 2, Rung 2 — error correction.** A *bit-rot* medium (seeded random
+  bit flips at rate λ). Carried forward unchanged, `protocell0` dies at every λ —
+  its identity copy propagates corruption. `protocell1` grows **triple modular
+  redundancy** (three copies, per-byte bitwise-majority repair) and raises the
+  error-catastrophe threshold λ\* **~4–5×**. The gain is capped by the executing
+  copy's own code (the "who repairs the repairer" limit). (`results/protocell/RUNG2.md`.)
+- ✅ **Safety hardening.** Containment is first-class: privileged instructions
+  trap (C1), all organism emulation runs in an isolated resource-capped worker
+  (C2), the toolchain is pinned/recorded (C5), and the whole rig runs inside a
+  **no-network, read-only, capability-dropped container** (C4) verified to hold
+  its walls. (`SECURITY.md`.)
+- ⬜ **Next — Rung 2.5 (foraging) / fixing the SPOF.** Execution rotation or a
+  minimal repair primer to lift the redundancy cap; then metabolism that must
+  capture fuel from the medium.
 
 ## Repository layout
 
@@ -74,24 +84,29 @@ the first few rungs of that ladder, built carefully and tested honestly.
 AUTOPOIESIS.md          the binding charter: what "alive" means here, what it rules
                         out, the six-point assay, and the rung-by-rung roadmap
 HYPOTHESES.md           Milestone 1's pre-registered, falsifiable predictions
+SECURITY.md             threat model + containment controls (C1..C6)
+CLAUDE.md               project rules (incl. keeping this README current)
 
-harness/                the sandbox + benchmark rig (Milestone 1)
+harness/                the sandbox + benchmark rig + containment (Milestone 1)
   abi.md                the contract every code blob follows
-  uc.py                 ctypes binding to libunicorn (+ memory/exec provenance hooks)
+  uc.py                 ctypes binding to libunicorn (provenance hooks + insn traps)
   sandbox.py            one-shot execution with exact instruction accounting
   elfobj.py  assemble.py  clang -> bare-metal ELF -> flat blob pipeline
-  runner.py  selftest.py
+  isolation.py          run emulation in a resource-capped worker process (C2)
+  containment.py        self-test: the sandbox walls hold (C1)
+  runner.py  selftest.py  isolation_selftest.py
 kernels/<name>/         spec + public/holdout test vectors for 10 micro-kernels
 candidates/<kernel>/    AI-written C and assembly sources (built blobs are gitignored)
 
 medium/                 the living medium (Phase 2)
-  world.py              the solvent-sweep world: continuous execution + decay
+  world.py              solvent + bit-rot decay laws: continuous execution + decay
   assay.py              the six-point aliveness key, applied by intervention
   build.py  selftest.py
-organisms/<name>/       organism.s + membrane.json (rock, blind, protocell0)
+organisms/<name>/       organism.s + membrane.json
+                        (rock, blind, protocell0; protocell1 = TMR error correction)
 
 scripts/                score.py (benchmark), report.py (table), life.py (assay)
-results/                RESULTS.md + raw run JSON for both milestones
+results/                RESULTS.md, protocell/RESULTS.md (rung 1), protocell/RUNG2.md
 ```
 
 ## Quick start
@@ -108,16 +123,40 @@ brew install unicorn capstone          # the C libraries the shim binds
 .venv/bin/python kernels/genvectors.py # (re)generate test vectors from oracles
 .venv/bin/python scripts/score.py --all && .venv/bin/python scripts/report.py
 
-# Phase 2, Rung 1 — the living organism
+# Phase 2 — the living organisms
 .venv/bin/python -m medium.selftest    # 16 medium self-tests (the aliveness assay)
 .venv/bin/python scripts/life.py       # run the assay; writes results/protocell/
+
+# Safety / containment
+.venv/bin/python -m harness.containment        # the sandbox walls hold (C1)
+.venv/bin/python -m harness.isolation_selftest # the worker contains failures (C2)
 ```
 
-## Safety invariant
+## Safety & containment
 
-All generated, self-modifying, and (later) evolved machine code executes **only
-inside the Unicorn emulator — never natively on the host.** This is
-non-negotiable and becomes essential once organisms rewrite themselves and drift.
+Containment is first-class — see `SECURITY.md` for the full threat model. The
+principle is **contain the box, don't shrink the organism**: the organism keeps
+total freedom *inside* the sandbox (full x86, self-modification, real decay), and
+we make the walls around it unbreakable and the room empty.
+
+- **Brain in a vat.** All organism code executes **only inside the Unicorn
+  emulator — never natively** — with a tiny fixed memory map, hard fuel/time/
+  lifetime caps, and no syscall path, so it has no actuators.
+- **C1 — privileged instructions trap.** `syscall`/`sysenter`/`cpuid` fault by
+  construction; `harness/containment.py` asserts the memory and control-flow
+  walls hold.
+- **C2 — isolated execution.** All organism emulation runs in a resource-capped
+  worker process (`harness/isolation.py`), so even a hypothetical emulator escape
+  lands somewhere that can do nothing.
+- **C4 — locked-down container.** `containment/run.sh` runs the whole rig with
+  `--network none`, a read-only root filesystem, `--cap-drop ALL`, non-root user,
+  and memory/cpu/pid caps; `containment/selftest_all.py` verifies inside that the
+  science passes *and* the walls hold. Use it for autonomous/drift phases —
+  never a networked or privileged host.
+
+```sh
+containment/run.sh                     # build + run the full suite, fully locked down
+```
 
 ## The larger aim
 

@@ -17,9 +17,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from harness import assemble, config  # noqa: E402
-from harness.runner import load_vectors, score  # noqa: E402
+from harness.isolation import isolated_call  # noqa: E402
+from harness.runner import load_vectors  # noqa: E402
 
 RUNS = config.REPO_ROOT / "results" / "runs"
+
+
+def _score(blob, vectors):
+    """Score a blob against vectors inside an isolated worker (control C2)."""
+    return isolated_call("harness.runner", "score", blob, vectors)
 
 
 def record(kernel: str, tag: str, payload: dict) -> None:
@@ -50,8 +56,8 @@ def build_and_score(kernel: str, src: Path, tag: str, opt: str) -> None:
     blob = assemble.load_blob(blob_dir)
     record(kernel, tag, {
         "source": _rel(src), "code_size": len(blob.code),
-        "public": score(blob, load_vectors(kernel, "public")),
-        "holdout": score(blob, load_vectors(kernel, "holdout")),
+        "public": _score(blob, load_vectors(kernel, "public")),
+        "holdout": _score(blob, load_vectors(kernel, "holdout")),
     })
 
 
@@ -91,3 +97,5 @@ if __name__ == "__main__":
                 run(k, cond)
     else:
         run(a.kernel, a.condition)
+    from harness import provenance
+    provenance.write()                       # stamp the toolchain (C5)
