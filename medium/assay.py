@@ -121,3 +121,23 @@ def assay(name: str, code: bytes, *, T_live: int, lifetime: int = 120,
                            "synthase_self_produced": synthase_self_produced,
                            "external_reads": prov.external_reads,
                            "phase_transition": ladder_results})
+
+
+def assay_full(name: str, code: bytes, T_live: int = 4000, lifetime: int = 120,
+               fine=tuple(range(100, 1001, 50))) -> dict:
+    """The complete per-organism assay plus a fine phase-transition sweep, as a
+    picklable dict. This is the unit of work run inside an isolated worker
+    (harness.isolation) so all organism emulation is contained."""
+    A = assay(name, code, T_live=T_live, lifetime=lifetime)
+    t_star, table = None, {}
+    for T in fine:
+        L = live(code, T=T, lifetime=150)
+        table[str(T)] = {"survived": L.survived, "lifespan": L.lifespan,
+                         "death": L.cause}
+        if L.survived and t_star is None:
+            t_star = T
+    return {"footprint": A.footprint, "survives": A.survives,
+            "lifespan": A.lifespan, "closure_score": A.closure_score,
+            "criteria": A.criteria, "evidence": A.evidence,
+            "t_star_fine": t_star, "mean_turnover": A.mean_turnover,
+            "mean_integrity": A.mean_integrity, "phase_fine": table}
