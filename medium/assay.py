@@ -30,16 +30,23 @@ def declaration(name: str) -> dict:
 
 
 def _corrupt(code: bytes, lo: int, length: int) -> bytes:
-    b = bytearray(code)
-    for o in range(lo, min(lo + length, len(b))):
-        b[o] ^= 0xFF                    # change the VALUE, keep it valid data
-    return bytes(b)
+    return _apply(code, lo, length, lambda v: v ^ 0xFF)  # change value, stay data
 
 
 def _zero(code: bytes, lo: int, length: int) -> bytes:
+    return _apply(code, lo, length, lambda v: 0)
+
+
+def _apply(code: bytes, lo: int, length: int, fn, copies=1, stride=0) -> bytes:
+    """Apply fn to bytes [lo,lo+length) in EVERY copy. For a redundant organism
+    (replicate>1) a component is only ablated when damaged in all copies — a
+    single-copy hit is repaired by the vote — so interventions target
+    lo + k*stride for k in 0..copies-1."""
     b = bytearray(code)
-    for o in range(max(0, lo), min(lo + length, len(b))):
-        b[o] = 0
+    for k in range(copies):
+        base = lo + k * stride
+        for o in range(max(0, base), min(base + length, len(b))):
+            b[o] = fn(b[o]) & 0xFF
     return bytes(b)
 
 
@@ -79,10 +86,16 @@ def assay(name: str, code: bytes, *, T_live: int, lifetime: int = 120,
     base = live(code, T=T_live, lifetime=lifetime)
     prov = live(code, T=T_live, lifetime=12, probe=True)   # provenance run
 
+    # Redundant organisms: ablate a component in ALL copies (a single-copy hit is
+    # repaired by the vote). copies/stride come from the declaration.
+    copies = decl.get("replicate", 1)
+    stride = decl.get("body_len", 0)
+
     # --- synthase intervention: zeroing the production machinery must halt life
     syn_lo, syn_len = decl.get("synthase", [0, 0])
     intact = live(code, T=T_live, lifetime=16)
-    no_synthase = live(_zero(code, syn_lo, syn_len), T=T_live, lifetime=16)
+    no_synthase = live(_apply(code, syn_lo, syn_len, lambda v: 0, copies, stride),
+                       T=T_live, lifetime=16)
     synthase_matters = intact.survived and not no_synthase.survived
     synthase_self_produced = set(range(syn_lo, syn_lo + syn_len)) <= prov.write_offsets
 
@@ -96,7 +109,8 @@ def assay(name: str, code: bytes, *, T_live: int, lifetime: int = 120,
         read = region <= prov.read_offsets
         not_executed = region.isdisjoint(prov.exec_offsets)
         rewritten = region <= prov.write_offsets
-        corrupted = live(_corrupt(code, m_lo, m_len), T=T_live, lifetime=16)
+        corrupted = live(_apply(code, m_lo, m_len, lambda v: v ^ 0xFF, copies, stride),
+                         T=T_live, lifetime=16)
         corruption_kills = intact.survived and not corrupted.survived
         membrane_genuine = read and not_executed and rewritten and corruption_kills
         ev = {"read": read, "not_executed": not_executed,

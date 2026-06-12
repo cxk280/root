@@ -1,0 +1,8 @@
+{
+ "replicate": 3,
+ "body_len": 160,
+ "footprint": 480,
+ "synthase": [0, 16],
+ "membrane": [128, 16],
+ "note": "Triple modular redundancy with a 64-bit-word majority repair (tighter germ than protocell1's byte-wise loop). Interventions apply at offset + k*160 for k in 0..2."
+}

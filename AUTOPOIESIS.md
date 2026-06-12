@@ -173,25 +173,29 @@ increasingly lifelike decay**, assayed at every rung. Two rules govern the climb
 
 The rungs:
 
-- **Rung 1 — solvent sweep (current target).** A background process reclaims any
-  byte not rewritten within the last *T* fuel-ticks. Forces continuous
-  self-production with the least machinery; fully deterministic, so one run is a
-  proof. **Assay:** six-point key + the homeostasis phase transition — survival
-  vs. *T*, with the threshold *T\** read off directly as the organism's metabolic
-  rate. *Goal:* the smallest unity that demonstrably lives, characterized
-  honestly on the closure spectrum.
-- **Rung 2 — stochastic bit-rot.** Random bit flips at rate λ; no freshness, no
-  sweep. Demands genuine **error detection and correction** (redundancy,
-  checksums, self-templating), not mere re-stamping. **Assay:** the
-  integrity-vs-λ curve and the critical λ\* (an error-catastrophe threshold);
-  nondeterministic, so seeded PRNG + many trials per λ. The rung-1 survivor is
-  expected to *die* here until it grows repair — the predicted, informative cliff.
-- **Rung 2.5 — starvation / foraging.** Orthogonal to corruption: running the
-  metabolism *costs* fuel that must be **captured from the medium**, and
-  exhaustion is death. This is the rung that introduces *outward behavior* — the
-  organism must act on its world to keep eating — and is the most direct route to
-  Maturana & Varela's structural coupling. **Assay:** does the unity forage and
-  hold a fuel homeostasis; does it couple its behavior to nutrient distribution.
+- **Rung 1 — solvent sweep (done).** A background process reclaims any byte not
+  rewritten within the last *T* fuel-ticks. Forces continuous self-production with
+  the least machinery; fully deterministic, so one run is a proof. **Result:**
+  `protocell0` lives, 6/6 on the six-point key, sharp metabolic threshold *T\* =
+  500* (`results/protocell/RESULTS.md`).
+- **Rung 2 — stochastic bit-rot (done).** Random bit flips at rate λ; no sweep.
+  Demands genuine **error correction**, not re-stamping. **Result:** `protocell0`
+  dies as predicted; `protocell1`'s triple modular redundancy raises λ\* ~4–5×,
+  capped by the "who repairs the repairer" single point of failure
+  (`results/protocell/RUNG2.md`).
+- **Rung 2.5 — lifting the SPOF with redundant execution (done).** The cap is a
+  property of *single-threaded* self-repair. A **colony** of several heads
+  (independent program counters) over one shared genome breaks it: a head whose
+  code is corrupted is repaired by another before it runs. **Result:** 2 heads
+  survive corruption rates lethal to a single head (~2–4× λ\*), and 2 heads beat 3
+  — a spontaneous **division of labor** (executing heads + a quiescent reference
+  copy). The colony is already a minimal multicellular unity
+  (`results/protocell/RUNG2B.md`).
+- **Rung 2.7 — starvation / foraging (next).** Orthogonal to corruption: running
+  the metabolism *costs* fuel that must be **captured from the medium**, and
+  exhaustion is death. Introduces *outward behavior* — the organism must act on
+  its world to keep eating — the most direct route to structural coupling.
+  **Assay:** does the unity forage and hold a fuel homeostasis.
 - **Rung 3 — layered.** Solvent boundary-turnover + low-rate component bit-rot +
   starvation, under one fuel budget the organism must *allocate* across membrane
   upkeep, interior repair, and foraging. **Assay:** the 2-D+ viability envelope —
@@ -205,12 +209,17 @@ organization — and whether a self-specializing metabolism does things a
 compiler-frozen program cannot (the `memchr` result of Milestone 1 is the first
 hint of that seam).
 
-### Phase 4 — natural drift
+### Phase 4 — natural drift (now with an on-ramp)
 
-Many unities, one finite fuel pool, decay; observe whether
+Rung 2.5 arrived here early and from below: the **colony** (`live_colony`) is
+already a minimal multicellular unity — several heads sharing and repairing one
+genome, with an emergent division of labor. Phase 4 generalizes it: many heads
+and many genomes, one finite fuel pool, decay; observe whether
 persistence-*without*-selection yields lineages — evolution as a *consequence* of
-autopoiesis, never an imposed engine. Visualization at that point follows the
-global `VIEWS.md` + mock-approval rule.
+autopoiesis, never an imposed engine. That redundant execution was *forced* by the
+single-PC repair limit (not designed in) is the strongest sign yet that the
+ladder's pressures, followed honestly, reproduce the logic of living organization.
+Visualization at that point follows the global `VIEWS.md` + mock-approval rule.
 
 Everything above is a commitment to a *standard*, not a promise of success: it is
 entirely possible the assay never goes fully affirmative. That failure would be

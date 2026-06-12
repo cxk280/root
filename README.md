@@ -67,16 +67,23 @@ the first few rungs of that ladder, built carefully and tested honestly.
   bit flips at rate λ). Carried forward unchanged, `protocell0` dies at every λ —
   its identity copy propagates corruption. `protocell1` grows **triple modular
   redundancy** (three copies, per-byte bitwise-majority repair) and raises the
-  error-catastrophe threshold λ\* **~4–5×**. The gain is capped by the executing
-  copy's own code (the "who repairs the repairer" limit). (`results/protocell/RUNG2.md`.)
+  error-catastrophe threshold λ\* **~4–5×**, capped by the executing copy's own
+  code (the "who repairs the repairer" limit). (`results/protocell/RUNG2.md`.)
+- ✅ **Phase 2, Rung 2.5 — lifting the cap with redundant execution.** Dilution
+  (bigger redundant body) raises λ\* as the germ's share of the body falls; the
+  real fix is a **colony** of several heads (independent program counters) over
+  one shared genome — **2 heads survive corruption rates flatly lethal to a single
+  head**, because a head whose code is corrupted is repaired by another before it
+  runs. Two heads beat three: a spontaneous **division of labor** (executing heads
+  + a quiescent reference copy). (`results/protocell/RUNG2B.md`.)
 - ✅ **Safety hardening.** Containment is first-class: privileged instructions
   trap (C1), all organism emulation runs in an isolated resource-capped worker
   (C2), the toolchain is pinned/recorded (C5), and the whole rig runs inside a
   **no-network, read-only, capability-dropped container** (C4) verified to hold
   its walls. (`SECURITY.md`.)
-- ⬜ **Next — Rung 2.5 (foraging) / fixing the SPOF.** Execution rotation or a
-  minimal repair primer to lift the redundancy cap; then metabolism that must
-  capture fuel from the medium.
+- ⬜ **Next — Phase 4 on-ramp.** A colony is a minimal multicellular unity; natural
+  drift over many heads sharing and repairing genomes is the next medium. (Plus
+  Rung 2.5 foraging: metabolism that must capture fuel from the medium.)
 
 ## Repository layout
 
@@ -99,14 +106,14 @@ kernels/<name>/         spec + public/holdout test vectors for 10 micro-kernels
 candidates/<kernel>/    AI-written C and assembly sources (built blobs are gitignored)
 
 medium/                 the living medium (Phase 2)
-  world.py              solvent + bit-rot decay laws: continuous execution + decay
+  world.py              solvent + bit-rot decay; live() single + live_colony() heads
   assay.py              the six-point aliveness key, applied by intervention
   build.py  selftest.py
-organisms/<name>/       organism.s + membrane.json
-                        (rock, blind, protocell0; protocell1 = TMR error correction)
+organisms/<name>/       organism.s + membrane.json. rock, blind, protocell0;
+                        protocell1/2 = TMR error correction (byte / word vote)
 
-scripts/                score.py (benchmark), report.py (table), life.py (assay)
-results/                RESULTS.md, protocell/RESULTS.md (rung 1), protocell/RUNG2.md
+scripts/                score.py (benchmark), report.py, life.py, redundancy.py
+results/                RESULTS.md; protocell/RESULTS.md, RUNG2.md, RUNG2B.md
 ```
 
 ## Quick start

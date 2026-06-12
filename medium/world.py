@@ -140,9 +140,16 @@ def live(code: bytes, T: int, lifetime: int = 200,
         mu.mem_map(STACK_BASE, STACK_SIZE, R | W)
         mu.mem_write(ARENA_BASE, birth)
         mu.reg_write(reg("RSP"), STACK_TOP)
-        mu.hook_mem_write(on_write)
-        mu.hook_mem_read(on_read)
+        # Per-access hooks are expensive (one Python callback per memory op). Only
+        # the solvent law needs write tracking (freshness); only the assay needs
+        # read/exec provenance. Bit-rot survival sweeps run hookless — a ~10x
+        # speedup — detecting death by fault/escape, which is how these organisms
+        # actually die.
+        track_writes = decay == "solvent" or probe
+        if track_writes:
+            mu.hook_mem_write(on_write)
         if probe:
+            mu.hook_mem_read(on_read)
             mu.hook_code(on_exec)
 
         cycles, cause = [], ""
@@ -152,7 +159,7 @@ def live(code: bytes, T: int, lifetime: int = 200,
             reads_self_window[0] = 0
             # run one inter-sweep window of T instructions
             try:
-                mu.emu_start(rip, ARENA_BASE + ARENA_SIZE, 5_000_000, T)
+                mu.emu_start(rip, ARENA_BASE + ARENA_SIZE, 0, T)  # count-bounded; no timer thread
             except UcError as e:
                 cause = f"fault:{e}"
             if not cause and mu.violation:    # guest ran a trapped instruction
@@ -174,8 +181,9 @@ def live(code: bytes, T: int, lifetime: int = 200,
                         o = rng.randrange(footprint)
                         region[o] ^= 1 << rng.randrange(8)   # flip one random bit
                     mu.mem_write(ARENA_BASE, bytes(region))
-            for o in range(DECAY_BYTES):
-                fresh[o] = 0
+            if track_writes:
+                for o in range(DECAY_BYTES):
+                    fresh[o] = 0
 
             body = mu.mem_read(ARENA_BASE, footprint)
             integ = sum(1 for a, b in zip(body, birth) if a == b) / footprint
@@ -184,7 +192,7 @@ def live(code: bytes, T: int, lifetime: int = 200,
             alive = True
             if cause:
                 alive = False
-            elif writes_window[0] == 0:
+            elif track_writes and writes_window[0] == 0:
                 alive, cause = False, "no_turnover"      # stopped metabolizing
             elif not rip_in:
                 alive, cause = False, "rip_escaped"      # left its own body
@@ -201,5 +209,88 @@ def live(code: bytes, T: int, lifetime: int = 200,
                     survived=True, cause="", cycles=cycles,
                     exec_offsets=exec_off, read_offsets=read_off,
                     write_offsets=write_off, external_reads=external_reads[0])
+    finally:
+        mu.close()
+
+
+@dataclass
+class Colony:
+    heads: int
+    footprint: int
+    lifespan: int
+    survived: bool
+    cause: str
+
+
+def live_colony(code: bytes, T: int, footprint: int, heads: list[int],
+                lifetime: int = 200, lam: float = 0.0, seed: int = 0) -> Colony:
+    """REDUNDANT EXECUTION (Rung 2.5): run several heads (independent program
+    counters) over one shared, decaying genome, in alternating windows. Each head
+    is a full majority-repairer; a head whose own code is corrupted FAULTS, but
+    instead of killing the colony it is reset to its entry and the *other* heads
+    repair its copy before its next turn. The single-PC "who repairs the
+    repairer" SPOF is broken: it now takes near-simultaneous corruption of
+    several heads' code to end the colony. `heads` are entry offsets into the
+    shared genome (e.g. [0, L] = two heads executing copies 0 and 1).
+
+    Death = a full round in which NO head completes a window (none left to
+    repair). Pure bit-rot decay; seeded for reproducible trials.
+    """
+    rng = random.Random(seed)
+    R, W, X = CONST["UC_PROT_READ"], CONST["UC_PROT_WRITE"], CONST["UC_PROT_EXEC"]
+    # Each head is an independent execution context: its own program counter AND
+    # its own register file (the engine has one set, so we save/restore on every
+    # switch — otherwise heads clobber each other's loop state). A head gets its
+    # own slice of stack too. `regs` None means "start clean at entry".
+    GP = ("RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "RBP", "R8", "R9", "R10",
+          "R11", "R12", "R13", "R14", "R15", "EFLAGS")
+    state = [{"entry": ARENA_BASE + off, "rip": ARENA_BASE + off, "regs": None,
+              "rsp": STACK_TOP - k * 0x10000}
+             for k, off in enumerate(heads)]
+
+    def restore(h):
+        if h["regs"] is None:                              # clean start at entry
+            for name in GP:
+                mu.reg_write(reg(name), 0)
+        else:
+            for name, val in h["regs"].items():
+                mu.reg_write(reg(name), val)
+        mu.reg_write(reg("RSP"), h["rsp"])
+
+    def save(h):
+        h["regs"] = {name: mu.reg_read(reg(name)) for name in GP}
+        h["rsp"] = mu.reg_read(reg("RSP"))
+
+    mu = Uc()
+    try:
+        mu.mem_map(ARENA_BASE, ARENA_SIZE, R | W | X)
+        mu.mem_map(STACK_BASE, STACK_SIZE, R | W)
+        mu.mem_write(ARENA_BASE, code)
+
+        for i in range(lifetime):
+            ran_ok = False
+            for h in state:
+                restore(h)
+                try:
+                    mu.emu_start(h["rip"], ARENA_BASE + ARENA_SIZE, 0, T)  # count-bounded
+                    if mu.violation:
+                        h["rip"], h["regs"] = h["entry"], None   # resurrect clean
+                    else:
+                        h["rip"] = mu.reg_read(reg("RIP"))
+                        save(h)
+                        ran_ok = True                       # a head repaired this window
+                except UcError:
+                    h["rip"], h["regs"] = h["entry"], None   # faulted -> resurrect
+                # bit-rot acts once per window (per head turn)
+                n = _poisson(rng, lam)
+                if n:
+                    region = bytearray(mu.mem_read(ARENA_BASE, footprint))
+                    for _ in range(n):
+                        o = rng.randrange(footprint)
+                        region[o] ^= 1 << rng.randrange(8)
+                    mu.mem_write(ARENA_BASE, bytes(region))
+            if not ran_ok:
+                return Colony(len(heads), footprint, i, False, "all_heads_down")
+        return Colony(len(heads), footprint, lifetime, True, "")
     finally:
         mu.close()
