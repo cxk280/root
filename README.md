@@ -69,9 +69,11 @@ the first few rungs of that ladder, built carefully and tested honestly.
   redundancy** (three copies, per-byte bitwise-majority repair) and raises the
   error-catastrophe threshold λ\* **~4–5×**. The gain is capped by the executing
   copy's own code (the "who repairs the repairer" limit). (`results/protocell/RUNG2.md`.)
-- ✅ **Safety hardening (in progress).** Containment is treated as first-class:
-  privileged instructions trap, and all organism emulation runs in an isolated,
-  resource-capped worker process. (`SECURITY.md`.)
+- ✅ **Safety hardening.** Containment is first-class: privileged instructions
+  trap (C1), all organism emulation runs in an isolated resource-capped worker
+  (C2), the toolchain is pinned/recorded (C5), and the whole rig runs inside a
+  **no-network, read-only, capability-dropped container** (C4) verified to hold
+  its walls. (`SECURITY.md`.)
 - ⬜ **Next — Rung 2.5 (foraging) / fixing the SPOF.** Execution rotation or a
   minimal repair primer to lift the redundancy cap; then metabolism that must
   capture fuel from the medium.
@@ -146,9 +148,15 @@ we make the walls around it unbreakable and the room empty.
 - **C2 — isolated execution.** All organism emulation runs in a resource-capped
   worker process (`harness/isolation.py`), so even a hypothetical emulator escape
   lands somewhere that can do nothing.
-- Memory/network/filesystem become *hard* walls in the locked-down container
-  (C4, planned); autonomous/drift phases never run on a networked or privileged
-  host.
+- **C4 — locked-down container.** `containment/run.sh` runs the whole rig with
+  `--network none`, a read-only root filesystem, `--cap-drop ALL`, non-root user,
+  and memory/cpu/pid caps; `containment/selftest_all.py` verifies inside that the
+  science passes *and* the walls hold. Use it for autonomous/drift phases —
+  never a networked or privileged host.
+
+```sh
+containment/run.sh                     # build + run the full suite, fully locked down
+```
 
 ## The larger aim
 

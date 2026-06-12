@@ -67,9 +67,9 @@ reaches anything, and the run is deterministic" is now *tested*, not assumed.
 | # | Risk | Control | Status |
 |---|---|---|---|
 | R1 | **Emulator implementation bug** (Unicorn ← QEMU TCG lineage) lets crafted guest code corrupt/execute in the *host process*. | Emulation runs in an **isolated worker process** (`harness/isolation.py`): bounded CPU time + wall-clock, no core dumps, bounded address space (Linux), few fds; a worker that dies/hangs/escapes is contained, not propagated. Network/FS hard-walling comes from the container (C4). | **done (C2)** — `isolation_selftest` |
-| R2 | Escaped code inherits the **host user's privileges**. | Worker is disposable and resource-clamped; full privilege-drop + empty room is the container (C4). | partial (C2) → C4 |
-| R3 | **Resource exhaustion / runaway** across many runs or large populations. | Hard caps in force: fuel + wall-clock + lifetime per run; worker CPU/mem/fsize rlimits. Population-size budget added at the population phase. | **enforced** |
-| R4 | **Unattended autonomous evolution** (Phase 4 natural drift) does something unexpected over long horizons. | Run autonomous phases in a **no-network container/VM**, ephemeral FS, kill-switch + max-wallclock, human checkpoint cadence; never on a host with sensitive access. Human-in-the-loop on every merge (already a project rule). | planned (C4) |
+| R2 | Escaped code inherits the **host user's privileges**. | The container (C4) runs non-root, `--cap-drop ALL`, `--security-opt no-new-privileges`, read-only root FS — the room is empty. | **done (C4)** |
+| R3 | **Resource exhaustion / runaway** across many runs or large populations. | Hard caps in force: fuel + wall-clock + lifetime per run; worker CPU/mem/fsize rlimits; container `--memory`/`--cpus`/`--pids-limit`. Population-size budget added at the population phase. | **enforced** |
+| R4 | **Unattended autonomous evolution** (Phase 4 natural drift) does something unexpected over long horizons. | `containment/run.sh` runs the rig in a **no-network** (`--network none`), read-only, capability-dropped container with memory/cpu/pid caps; verified by `containment/selftest_all.py`. Human-in-the-loop on every merge (project rule). | **available (C4)** |
 | R5 | **Supply chain** (Unicorn/Capstone/toolchain). | `results/provenance.json` records Unicorn version + lib hash and the clang version; the in-repo `ctypes` shim avoids a PyPI binary for Unicorn (binds the system lib). | **done (C5)** |
 | R6 | **Nondeterminism leak** (e.g. `rdtsc`) undermines auditability. | `cpuid` trapped (C1); bit-rot seeded and the seed recorded; `rdtsc` documented (emulated counter, off every result path). | partial (C6) |
 
@@ -85,6 +85,20 @@ Enforced today by `harness/containment.py` (C1) and `harness/isolation_selftest.
 4. Runs are bit-for-bit reproducible from (organism, medium, T, λ, seed). ✅
 5. Emulation runs in a separate, resource-clamped process. ✅ (C2) — network and
    writable-FS hard-walling is added by the container (C4, planned).
+
+## Running under full containment (C4)
+
+```sh
+containment/run.sh                       # build + run the full self-test suite,
+                                         # locked down (no network, read-only, etc.)
+containment/run.sh python3 scripts/life.py   # run any command inside the box
+```
+
+`containment/run.sh` enforces `--network none`, a read-only root filesystem (only
+an ephemeral tmpfs scratch is writable), `--cap-drop ALL`,
+`--security-opt no-new-privileges`, a non-root user, and memory/cpu/pid caps.
+`containment/selftest_all.py` runs inside and verifies both the science and the
+walls (network blocked, root read-only, scratch writable) — all green on Linux.
 
 ## Operating rules
 

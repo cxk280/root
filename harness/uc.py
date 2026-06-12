@@ -17,21 +17,31 @@ _SEARCH_PREFIXES = [
     Path("/usr/local"),
     Path("/usr"),
 ]
+# lib subdirectories to search under each prefix (macOS + Linux multiarch)
+_LIB_DIRS = ("lib", "lib64", "lib/x86_64-linux-gnu", "lib/aarch64-linux-gnu")
+_LIB_GLOBS = ("libunicorn.dylib", "libunicorn*.dylib",
+              "libunicorn.so", "libunicorn.so.*")
 
 
 def _find(kind: str) -> Path:
-    for p in _SEARCH_PREFIXES:
-        if kind == "lib":
-            for name in ("libunicorn.dylib", "libunicorn.2.dylib", "libunicorn.so"):
-                c = p / "lib" / name
-                if c.exists():
-                    return c
-        else:
+    if kind != "lib":
+        for p in _SEARCH_PREFIXES:
             c = p / "include" / "unicorn"
             if (c / "unicorn.h").exists():
                 return c
-    raise RuntimeError(
-        f"libunicorn {kind} not found; install with `brew install unicorn`")
+        raise RuntimeError("unicorn headers not found; install libunicorn-dev "
+                           "(Linux) or `brew install unicorn` (macOS)")
+    for p in _SEARCH_PREFIXES:
+        for d in _LIB_DIRS:
+            for pat in _LIB_GLOBS:
+                hits = sorted((p / d).glob(pat)) if (p / d).is_dir() else []
+                if hits:
+                    return hits[-1]
+    found = ctypes.util.find_library("unicorn")   # linker fallback (Linux)
+    if found:
+        return Path(found)
+    raise RuntimeError("libunicorn not found; install libunicorn-dev (Linux) "
+                       "or `brew install unicorn` (macOS)")
 
 
 def _parse_enums(header_text: str, into: dict) -> None:
@@ -65,7 +75,9 @@ def _parse_enums(header_text: str, into: dict) -> None:
 _inc = _find("include")
 CONST: dict = {}
 for _h in ("unicorn.h", "x86.h"):
-    _parse_enums((_inc / _h).read_text(errors="replace"), CONST)
+    _hp = _inc / _h
+    if _hp.exists():
+        _parse_enums(_hp.read_text(errors="replace"), CONST)
 
 for _needed in ("UC_ARCH_X86", "UC_MODE_64", "UC_PROT_READ", "UC_PROT_WRITE",
                 "UC_PROT_EXEC", "UC_HOOK_CODE", "UC_HOOK_MEM_WRITE",
