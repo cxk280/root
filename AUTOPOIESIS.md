@@ -199,10 +199,13 @@ The rungs:
   sensing, not motion, is foraging. The third threshold in the family T\* · λ\* ·
   v\*; Maturana & Varela's chemotaxing bacterium, in machine code
   (`results/protocell/RUNG2C.md`).
-- **Rung 3 — layered.** Solvent boundary-turnover + low-rate component bit-rot +
-  starvation, under one fuel budget the organism must *allocate* across membrane
-  upkeep, interior repair, and foraging. **Assay:** the 2-D+ viability envelope —
-  interpretable only because each axis was characterized alone first.
+- **Rung 3 — layered (done).** `protocell3` runs the **hybrid model** decided for
+  this rung: a continuous self-production loop (solvent) + **tick-gated** foraging
+  (the world triggers behavior), with **fuel gating repair** — low fuel shrinks the
+  per-window budget, so starvation impairs self-production. **Result:** a 2-D
+  **viability envelope** bounded by *dissolution* below (the T\* self-production
+  floor) and *starvation* on the right (the v\* foraging bandwidth) — the same
+  thresholds, now composed through one budget (`results/protocell/RUNG3.md`).
 
 ### Phase 3 — structural coupling at large
 

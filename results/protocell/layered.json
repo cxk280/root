@@ -1,0 +1,126 @@
+{
+ "Ts": [
+  700,
+  1000,
+  2000,
+  4000
+ ],
+ "Vs": [
+  0.3,
+  0.6,
+  1.0,
+  1.4,
+  1.8
+ ],
+ "seeds": 4,
+ "grid": {
+  "700": {
+   "0.3": {
+    "survived": 0,
+    "of": 4,
+    "verdict": "dissolved"
+   },
+   "0.6": {
+    "survived": 0,
+    "of": 4,
+    "verdict": "dissolved"
+   },
+   "1.0": {
+    "survived": 0,
+    "of": 4,
+    "verdict": "dissolved"
+   },
+   "1.4": {
+    "survived": 0,
+    "of": 4,
+    "verdict": "dissolved"
+   },
+   "1.8": {
+    "survived": 0,
+    "of": 4,
+    "verdict": "dissolved"
+   }
+  },
+  "1000": {
+   "0.3": {
+    "survived": 0,
+    "of": 4,
+    "verdict": "dissolved"
+   },
+   "0.6": {
+    "survived": 0,
+    "of": 4,
+    "verdict": "dissolved"
+   },
+   "1.0": {
+    "survived": 0,
+    "of": 4,
+    "verdict": "dissolved"
+   },
+   "1.4": {
+    "survived": 0,
+    "of": 4,
+    "verdict": "dissolved"
+   },
+   "1.8": {
+    "survived": 0,
+    "of": 4,
+    "verdict": "dissolved"
+   }
+  },
+  "2000": {
+   "0.3": {
+    "survived": 4,
+    "of": 4,
+    "verdict": "live"
+   },
+   "0.6": {
+    "survived": 4,
+    "of": 4,
+    "verdict": "live"
+   },
+   "1.0": {
+    "survived": 4,
+    "of": 4,
+    "verdict": "live"
+   },
+   "1.4": {
+    "survived": 1,
+    "of": 4,
+    "verdict": "starved"
+   },
+   "1.8": {
+    "survived": 0,
+    "of": 4,
+    "verdict": "starved"
+   }
+  },
+  "4000": {
+   "0.3": {
+    "survived": 4,
+    "of": 4,
+    "verdict": "live"
+   },
+   "0.6": {
+    "survived": 4,
+    "of": 4,
+    "verdict": "live"
+   },
+   "1.0": {
+    "survived": 4,
+    "of": 4,
+    "verdict": "live"
+   },
+   "1.4": {
+    "survived": 1,
+    "of": 4,
+    "verdict": "starved"
+   },
+   "1.8": {
+    "survived": 0,
+    "of": 4,
+    "verdict": "starved"
+   }
+  }
+ }
+}

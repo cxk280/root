@@ -424,3 +424,117 @@ def live_forage(code: bytes, T: int, lifetime: int = 300, *, food_speed: float =
 
 def _mean(xs):
     return sum(xs) / len(xs) if xs else 0.0
+
+
+# --- Rung 3: the layered medium (self-production + foraging, one budget) ---
+LPOS_OFF, LSENSE_OFF, LTICK_OFF = 192, 200, 204   # protocell3's data offsets
+
+
+@dataclass
+class Layered:
+    survived: bool
+    lifespan: int
+    cause: str
+    mean_integrity: float
+    mean_fuel: float
+    harvests: int
+
+
+def live_layered(code: bytes, T: int, footprint: int, lifetime: int = 300, *,
+                 food_speed: float = 0.6, turn: float = 0.12, seed: int = 0,
+                 fuel0: int = 600, cost: int = 10, reward: int = 25,
+                 harvest_radius: int = 1, starve_thresh: int = 200) -> Layered:
+    """LAYERED (Rung 3, hybrid model). The organism faces BOTH pressures on one
+    instruction budget: it must continuously re-lay its body against the solvent
+    (self-production) AND chemotax to a drifting nutrient to keep fuel above zero
+    (foraging, gated by a per-window tick). The two are coupled — when fuel falls
+    below `starve_thresh` the per-window budget T shrinks proportionally, so
+    starvation impairs repair and the organism dissolves. Death modes:
+    `starved` (fuel hit 0) or `dissolved` (integrity collapsed) or fault.
+    """
+    rng = random.Random(seed)
+    birth = code
+    R, W, X = CONST["UC_PROT_READ"], CONST["UC_PROT_WRITE"], CONST["UC_PROT_EXEC"]
+    mu = Uc()
+    fresh = bytearray(DECAY_BYTES)
+
+    def on_write(addr, size, _v):
+        off = addr - ARENA_BASE
+        for k in range(size):
+            o = off + k
+            if 0 <= o < DECAY_BYTES:
+                fresh[o] = 1
+
+    try:
+        mu.mem_map(ARENA_BASE, ARENA_SIZE, R | W | X)
+        mu.mem_map(STACK_BASE, STACK_SIZE, R | W)
+        mu.mem_write(ARENA_BASE, code)
+        mu.reg_write(reg("RSP"), STACK_TOP)
+        mu.hook_mem_write(on_write)
+
+        pos = food = WORLD_N // 2
+        direction = 1 if seed % 2 == 0 else -1
+        fuel, harvests = fuel0, 0
+        mu.mem_write(ARENA_BASE + LPOS_OFF, bytes([pos]))
+        for d in (-1, 0, 1):
+            mu.mem_write(ARENA_BASE + LSENSE_OFF + d + 1, bytes([_signal(pos + d, food)]))
+        mu.mem_write(ARENA_BASE + LTICK_OFF, bytes([1]))
+
+        rip, integs, fuels, cause = ARENA_BASE, [], [], ""
+        i = 0
+        for i in range(lifetime):
+            if fuel <= 0:
+                cause = "starved"
+                break
+            # fuel gates repair: a starving organism gets less budget to maintain itself
+            t_eff = T if fuel >= starve_thresh else max(60, int(T * fuel / starve_thresh))
+            for o in range(DECAY_BYTES):
+                fresh[o] = 0
+            try:
+                mu.emu_start(rip, ARENA_BASE + ARENA_SIZE, 0, t_eff)
+            except UcError:
+                # the organism lost its boundary and suicided (or faulted). WHY:
+                # depleted fuel (starvation impaired repair) vs. too small a budget.
+                cause = "starved" if fuel < starve_thresh else "dissolved"
+                break
+            if mu.violation:
+                cause = f"fault:forbidden_{mu.violation}"
+                break
+            rip = mu.reg_read(reg("RIP"))
+            # solvent decay
+            blank = bytearray(mu.mem_read(ARENA_BASE, DECAY_BYTES))
+            for o in range(DECAY_BYTES):
+                if not fresh[o]:
+                    blank[o] = 0
+            mu.mem_write(ARENA_BASE, bytes(blank))
+            body = mu.mem_read(ARENA_BASE, footprint)
+            integ = sum(1 for a, b in zip(body, birth) if a == b) / footprint
+            integs.append(integ)
+            fuels.append(fuel)
+            if not ARENA_BASE <= rip < ARENA_BASE + DECAY_BYTES:
+                cause = "dissolved"
+                break
+            if integ < 0.55:
+                cause = "dissolved"
+                break
+            # the world: nutrient drifts; the organism harvests if it kept up
+            pos = mu.mem_read(ARENA_BASE + LPOS_OFF, 1)[0] % WORLD_N
+            if rng.random() < turn:
+                direction = -direction
+            steps = int(food_speed) + (1 if rng.random() < (food_speed % 1) else 0)
+            for _ in range(steps):
+                food += direction
+                if food < 0:
+                    food, direction = 0, -direction
+                elif food >= WORLD_N:
+                    food, direction = WORLD_N - 1, -direction
+            if abs(pos - food) <= harvest_radius:
+                fuel += reward
+                harvests += 1
+            fuel -= cost
+            for d in (-1, 0, 1):
+                mu.mem_write(ARENA_BASE + LSENSE_OFF + d + 1, bytes([_signal(pos + d, food)]))
+            mu.mem_write(ARENA_BASE + LTICK_OFF, bytes([1]))
+        return Layered(cause == "", i, cause, _mean(integs), _mean(fuels), harvests)
+    finally:
+        mu.close()

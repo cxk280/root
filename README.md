@@ -93,9 +93,16 @@ the first few rungs of that ladder, built carefully and tested honestly.
   (C2), the toolchain is pinned/recorded (C5), and the whole rig runs inside a
   **no-network, read-only, capability-dropped container** (C4) verified to hold
   its walls. (`SECURITY.md`.)
-- ⬜ **Next — Rung 3 (layered) / Phase 4 (natural drift).** Layer self-production +
-  error correction + foraging under one fuel budget; then many heads sharing and
-  repairing genomes — the colony is already a minimal multicellular unity.
+- ✅ **Phase 2, Rung 3 — the layered organism.** `protocell3` faces self-production
+  *and* foraging on one budget, coupled so that **fuel gates repair** (starvation
+  shrinks the per-window budget → impaired self-production). The result is a 2-D
+  **viability envelope**: it dissolves when the budget can't self-produce (T\*
+  floor) and starves when the nutrient outruns it (v\* edge) — the same thresholds,
+  now composed. Continuous metabolism + world-triggered behavior: the hybrid
+  model, living = cognitive made mechanical. (`results/protocell/RUNG3.md`.)
+- ⬜ **Next — Phase 4 (natural drift).** Many unities sharing and repairing genomes
+  under one finite fuel pool, where differential persistence (not an imposed
+  fitness function) is the only selection. The colony is already its seed.
 
 ## Repository layout
 
@@ -122,12 +129,13 @@ medium/                 the living medium (Phase 2)
   assay.py              the six-point aliveness key, applied by intervention
   build.py  selftest.py
 organisms/<name>/       organism.s (+ membrane.json). rock, blind, protocell0;
-                        protocell1/2 = TMR error correction; forager0/sweep = chemotaxis
+                        protocell1/2 = TMR; forager0/sweep = chemotaxis;
+                        protocell3 = layered (self-produce + forage on one budget)
 
-scripts/                score.py, report.py, life.py, redundancy.py, forage.py
+scripts/                score.py, report.py, life.py, redundancy.py, forage.py, layered.py
 viz/                    live web visualizer — server.py (SSE) + scenes.py + static/
 VIEWS.md                verbal spec of every visualizer view (mocks-first rule)
-results/                RESULTS.md; protocell/RESULTS.md, RUNG2.md, RUNG2B.md, RUNG2C.md
+results/                RESULTS.md; protocell/RESULTS.md, RUNG2.md, RUNG2B.md, RUNG2C.md, RUNG3.md
 ```
 
 ## Quick start
