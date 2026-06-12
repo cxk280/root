@@ -155,6 +155,8 @@ def live(code: bytes, T: int, lifetime: int = 200,
                 mu.emu_start(rip, ARENA_BASE + ARENA_SIZE, 5_000_000, T)
             except UcError as e:
                 cause = f"fault:{e}"
+            if not cause and mu.violation:    # guest ran a trapped instruction
+                cause = f"fault:forbidden_{mu.violation}"
             rip = mu.reg_read(reg("RIP"))
 
             # the medium's decay law acts
