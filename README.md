@@ -76,14 +76,21 @@ the first few rungs of that ladder, built carefully and tested honestly.
   head**, because a head whose code is corrupted is repaired by another before it
   runs. Two heads beat three: a spontaneous **division of labor** (executing heads
   + a quiescent reference copy). (`results/protocell/RUNG2B.md`.)
+- ✅ **Phase 2, Rung 2.7 — foraging & structural coupling.** The first rung with
+  outward *behavior*: a fuel economy where the organism starves unless it tracks a
+  drifting nutrient by climbing a chemical gradient (Maturana & Varela's
+  chemotaxing bacterium, in machine code). `forager0` (chemotaxis) survives up to
+  a bandwidth **v\* ≈ 1.2 steps/window**; the non-sensing `forager_sweep` starves
+  at every speed. Sensing, not motion, is what makes it foraging.
+  (`results/protocell/RUNG2C.md`.)
 - ✅ **Safety hardening.** Containment is first-class: privileged instructions
   trap (C1), all organism emulation runs in an isolated resource-capped worker
   (C2), the toolchain is pinned/recorded (C5), and the whole rig runs inside a
   **no-network, read-only, capability-dropped container** (C4) verified to hold
   its walls. (`SECURITY.md`.)
-- ⬜ **Next — Phase 4 on-ramp.** A colony is a minimal multicellular unity; natural
-  drift over many heads sharing and repairing genomes is the next medium. (Plus
-  Rung 2.5 foraging: metabolism that must capture fuel from the medium.)
+- ⬜ **Next — Rung 3 (layered) / Phase 4 (natural drift).** Layer self-production +
+  error correction + foraging under one fuel budget; then many heads sharing and
+  repairing genomes — the colony is already a minimal multicellular unity.
 
 ## Repository layout
 
@@ -109,11 +116,11 @@ medium/                 the living medium (Phase 2)
   world.py              solvent + bit-rot decay; live() single + live_colony() heads
   assay.py              the six-point aliveness key, applied by intervention
   build.py  selftest.py
-organisms/<name>/       organism.s + membrane.json. rock, blind, protocell0;
-                        protocell1/2 = TMR error correction (byte / word vote)
+organisms/<name>/       organism.s (+ membrane.json). rock, blind, protocell0;
+                        protocell1/2 = TMR error correction; forager0/sweep = chemotaxis
 
-scripts/                score.py (benchmark), report.py, life.py, redundancy.py
-results/                RESULTS.md; protocell/RESULTS.md, RUNG2.md, RUNG2B.md
+scripts/                score.py, report.py, life.py, redundancy.py, forage.py
+results/                RESULTS.md; protocell/RESULTS.md, RUNG2.md, RUNG2B.md, RUNG2C.md
 ```
 
 ## Quick start

@@ -8,7 +8,7 @@ import sys
 
 from .assay import assay
 from .build import build_organism
-from .world import live, live_colony
+from .world import live, live_colony, live_forage
 
 
 def main() -> int:
@@ -74,6 +74,25 @@ def main() -> int:
          colony_clean.survived, colony_clean.cause),
         ("redundant execution lifts the cap: colony outlives single head at lethal lambda",
          colony_alive > single_dead, (single_dead, colony_alive)),
+    ]
+
+    # Foraging / structural coupling (Rung 2.7): chemotaxis tracks a moving
+    # nutrient and lives; non-sensing motion starves. There is a drift-speed
+    # bandwidth v* below which the forager survives and above which it starves.
+    f0, fsweep = build_organism("forager0"), build_organism("forager_sweep")
+    chemo_slow = live_forage(f0, T=10000, lifetime=300, food_speed=0.8, seed=0)
+    chemo_fast = sum(live_forage(f0, T=10000, lifetime=300, food_speed=2.0, seed=s).survived
+                     for s in range(6))
+    sweep_static = live_forage(fsweep, T=10000, lifetime=300, food_speed=0.0, seed=0)
+    checks += [
+        ("chemotaxis tracks a moving nutrient and lives (v < v*)",
+         chemo_slow.survived and chemo_slow.track_error < 2.0,
+         (chemo_slow.survived, round(chemo_slow.track_error, 1))),
+        ("foraging has a bandwidth v*: chemotaxis starves when food outruns it",
+         chemo_fast == 0, chemo_fast),
+        ("non-sensing motion is not foraging: the sweep control starves",
+         not sweep_static.survived and sweep_static.cause == "starved",
+         (sweep_static.cause, sweep_static.harvests)),
     ]
 
     ok = True

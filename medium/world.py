@@ -294,3 +294,99 @@ def live_colony(code: bytes, T: int, footprint: int, heads: list[int],
         return Colony(len(heads), footprint, lifetime, True, "")
     finally:
         mu.close()
+
+
+WORLD_N = 64           # size of the 1-D foraging world
+POS_OFF = 64           # body offset where the organism stores its position byte
+SENSE_OFF = 72         # body offset where the medium writes the 3-cell gradient
+
+
+@dataclass
+class Forage:
+    survived: bool
+    lifespan: int
+    cause: str
+    mean_fuel: float
+    track_error: float       # mean |pos - food|; small = good chemotaxis
+    harvests: int
+
+
+def _signal(p: int, food: int) -> int:
+    """Chemical gradient: stronger (up to 255) the closer position p is to food."""
+    return max(0, WORLD_N - abs(p - food))
+
+
+def live_forage(code: bytes, T: int, lifetime: int = 300, *, food_speed: float = 1.0,
+                turn: float = 0.12, seed: int = 0, fuel0: int = 800, cost: int = 10,
+                reward: int = 25, harvest_radius: int = 1) -> Forage:
+    """STRUCTURAL COUPLING / FORAGING (Rung 2.7). The organism lives only by
+    keeping its fuel above zero: every window costs `cost` fuel, and it regains
+    `reward` only when its position sits within `harvest_radius` of a nutrient
+    that drifts `food_speed` steps/window. The medium writes a local chemical
+    gradient (signal at pos-1, pos, pos+1) into the organism's sensor cells; the
+    organism must read it and steer toward food. Behavior must track the world —
+    Maturana & Varela's chemotaxing bacterium, in machine code. Death = fuel <= 0
+    (starvation) or fault. Foraging is characterized here ALONE (no decay);
+    Rung 3 layers it onto self-production.
+    """
+    rng = random.Random(seed)
+    R, W, X = CONST["UC_PROT_READ"], CONST["UC_PROT_WRITE"], CONST["UC_PROT_EXEC"]
+    HALT = config.HALT_ADDR
+    mu = Uc()
+    try:
+        mu.mem_map(ARENA_BASE, ARENA_SIZE, R | W | X)
+        mu.mem_map(STACK_BASE, STACK_SIZE, R | W)
+        mu.mem_map(HALT & ~0xFFF, 0x1000, R | X)
+        mu.mem_write(ARENA_BASE, code)
+
+        pos = food = WORLD_N // 2
+        direction = 1 if seed % 2 == 0 else -1     # initial nutrient heading
+        fuel, harvests = fuel0, 0
+        mu.mem_write(ARENA_BASE + POS_OFF, bytes([pos]))
+        for d in (-1, 0, 1):                       # prime the sensors
+            mu.mem_write(ARENA_BASE + SENSE_OFF + d + 1, bytes([_signal(pos + d, food)]))
+
+        errs = []
+        for i in range(lifetime):
+            # invoke the organism for ONE forage action (sense -> move -> ret)
+            mu.reg_write(reg("RSP"), STACK_TOP)
+            mu.mem_write(STACK_TOP, HALT.to_bytes(8, "little"))
+            try:
+                mu.emu_start(ARENA_BASE, HALT, 0, T)
+            except UcError as e:
+                return Forage(False, i, f"fault:{e}", _mean(errs), _mean(errs), harvests)
+            if mu.violation:
+                return Forage(False, i, f"fault:forbidden_{mu.violation}",
+                              _mean(errs), _mean(errs), harvests)
+            if mu.reg_read(reg("RIP")) != HALT:    # ran away instead of returning
+                return Forage(False, i, "no_return", _mean(errs), _mean(errs), harvests)
+
+            pos = mu.mem_read(ARENA_BASE + POS_OFF, 1)[0] % WORLD_N
+            # nutrient drifts BALLISTICALLY (constant velocity, bounce at walls):
+            # the organism steps 1/window, so food_speed > 1 genuinely outruns it.
+            if rng.random() < turn:                # occasional reversal: a pure
+                direction = -direction             # ballistic sweep can't re-acquire,
+            steps = int(food_speed) + (1 if rng.random() < (food_speed % 1) else 0)
+            for _ in range(steps):                 # but a gradient-sensor can
+                food += direction
+                if food < 0:
+                    food, direction = 0, -direction
+                elif food >= WORLD_N:
+                    food, direction = WORLD_N - 1, -direction
+            errs.append(abs(pos - food))
+            if abs(pos - food) <= harvest_radius:
+                fuel += reward
+                harvests += 1
+            fuel -= cost
+            if fuel <= 0:
+                return Forage(False, i, "starved", _mean(errs), _mean(errs), harvests)
+            for d in (-1, 0, 1):                   # update what the organism can sense
+                mu.mem_write(ARENA_BASE + SENSE_OFF + d + 1,
+                             bytes([_signal(pos + d, food)]))
+        return Forage(True, lifetime, "", fuel0, _mean(errs), harvests)
+    finally:
+        mu.close()
+
+
+def _mean(xs):
+    return sum(xs) / len(xs) if xs else 0.0

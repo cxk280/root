@@ -191,11 +191,14 @@ The rungs:
   — a spontaneous **division of labor** (executing heads + a quiescent reference
   copy). The colony is already a minimal multicellular unity
   (`results/protocell/RUNG2B.md`).
-- **Rung 2.7 — starvation / foraging (next).** Orthogonal to corruption: running
-  the metabolism *costs* fuel that must be **captured from the medium**, and
-  exhaustion is death. Introduces *outward behavior* — the organism must act on
-  its world to keep eating — the most direct route to structural coupling.
-  **Assay:** does the unity forage and hold a fuel homeostasis.
+- **Rung 2.7 — foraging / structural coupling (done).** A fuel economy: every
+  window costs fuel, regained only by sitting on a drifting nutrient; the medium
+  exposes a chemical gradient the organism must climb. **Result:** `forager0`
+  (chemotaxis) tracks the nutrient and lives up to a bandwidth **v\* ≈ 1.2
+  steps/window**; the non-sensing `forager_sweep` starves at every speed —
+  sensing, not motion, is foraging. The third threshold in the family T\* · λ\* ·
+  v\*; Maturana & Varela's chemotaxing bacterium, in machine code
+  (`results/protocell/RUNG2C.md`).
 - **Rung 3 — layered.** Solvent boundary-turnover + low-rate component bit-rot +
   starvation, under one fuel budget the organism must *allocate* across membrane
   upkeep, interior repair, and foraging. **Assay:** the 2-D+ viability envelope —
