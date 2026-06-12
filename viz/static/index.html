@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Living Software — visualizer</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="dot" id="dot"></span>Living Software
+      <span class="badge">contained · local</span></div>
+    <div class="tabs">
+      <button class="tab active" data-view="arena">Arena</button>
+      <button class="tab" data-view="forager">Forager</button>
+      <button class="tab" data-view="thresholds">Thresholds</button>
+      <button class="tab" data-view="overview">Overview</button>
+    </div>
+    <div class="transport" id="transport">
+      <button class="tbtn" id="playpause">⏸</button>
+      <button class="tbtn" id="step">⏭</button>
+      <input type="range" id="speed" min="0.25" max="8" step="0.25" value="1">
+      <span id="speedlbl">1×</span>
+    </div>
+  </div>
+
+  <!-- ARENA -->
+  <section class="view active" id="view-arena">
+    <h1 class="view-title">Organism in its arena</h1>
+    <p class="caption">One organism, rebuilding its own body faster than the world erases it.</p>
+    <div class="cols">
+      <div class="panel">
+        <h3>Organism</h3>
+        <div class="field">
+          <select id="a-org">
+            <option value="rock">rock</option>
+            <option value="blind">blind</option>
+            <option value="protocell0">protocell0</option>
+            <option value="protocell1" selected>protocell1</option>
+            <option value="protocell2">protocell2</option>
+            <option value="colony">colony (2 heads)</option>
+          </select>
+        </div>
+        <h3>Decay law</h3>
+        <div class="seg" id="a-decay">
+          <button data-d="solvent">Solvent</button>
+          <button data-d="bitrot" class="on">Bit-rot</button>
+        </div>
+        <div class="field" style="margin-top:16px">
+          <label id="a-sliderlbl">λ — mean flips / window</label>
+          <input type="range" id="a-slider" min="0" max="0.4" step="0.01" value="0.08">
+          <div class="hint" id="a-sliderhint"></div>
+        </div>
+      </div>
+      <div class="panel stage"><canvas id="a-canvas" width="460" height="392"></canvas>
+        <div class="death" id="a-death"><div class="card"><b id="a-dcause">died</b><span>organism dissolved</span></div></div>
+      </div>
+      <div class="panel">
+        <h3>Vital signs</h3>
+        <div class="gauge"><span class="big" id="a-integ">—</span><span class="unit">% integrity</span></div>
+        <div class="bar"><i id="a-integbar" style="width:0%"></i></div>
+        <div style="margin-top:16px"><div class="hint" style="margin-bottom:4px">heartbeat — integrity &amp; turnover</div>
+          <canvas id="a-heart" width="218" height="60"></canvas></div>
+        <div class="readout">
+          <div class="k">window</div><div class="v" id="a-win">—</div>
+          <div class="k">integrity</div><div class="v" id="a-integ2">—</div>
+          <div class="k">turnover</div><div class="v" id="a-turn">—</div>
+          <div class="k">heads alive</div><div class="v" id="a-heads">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--code)"></i>code</span>
+      <span><i style="background:var(--membrane)"></i>membrane</span>
+      <span><i style="background:var(--data)"></i>data</span>
+      <span><i style="background:var(--zero);outline:1px solid #2c3450"></i>dissolved</span>
+      <span><i style="background:var(--decay)"></i>decay flash</span>
+      <span><i style="background:var(--repair)"></i>repair flash</span>
+      <span><i style="background:#0b0e14;outline:2px solid #fff"></i>execution head</span>
+    </div>
+  </section>
+
+  <!-- FORAGER -->
+  <section class="view" id="view-forager">
+    <h1 class="view-title">The forager's world</h1>
+    <p class="caption">It must sense where the food is and steer toward it, or starve.</p>
+    <div class="cols">
+      <div class="panel">
+        <h3>Forager</h3>
+        <div class="seg" id="f-org">
+          <button data-o="forager0" class="on">Chemotaxis</button>
+          <button data-o="forager_sweep">Sweep</button>
+        </div>
+        <div class="field" style="margin-top:16px">
+          <label>nutrient drift — steps / window</label>
+          <input type="range" id="f-slider" min="0" max="2" step="0.1" value="0.8">
+          <div class="hint" id="f-sliderhint"></div>
+        </div>
+      </div>
+      <div class="panel stage" style="flex-direction:column;align-items:stretch">
+        <div class="hint" style="margin-bottom:8px">1-D world — 64 cells · gradient brighter near food</div>
+        <canvas id="f-canvas" width="720" height="300"></canvas>
+        <div class="hint" style="margin-top:6px">below the strip: position over time — the forager (teal) hugs the food (amber)</div>
+        <div class="death" id="f-death"><div class="card"><b>starved</b><span>fuel ran out — it lost the food</span></div></div>
+      </div>
+      <div class="panel">
+        <h3>Fuel</h3>
+        <div style="display:flex;gap:16px;align-items:flex-end">
+          <div style="width:34px;height:150px;background:var(--panel2);border-radius:8px;position:relative;overflow:hidden">
+            <i id="f-fuelbar" style="position:absolute;bottom:0;left:0;right:0;height:0%;background:linear-gradient(0deg,#2dd4bf,#5b8def);transition:height .15s"></i></div>
+          <div><div class="gauge"><span class="big" id="f-fuel">—</span><span class="unit">fuel</span></div>
+            <div class="hint">+25 on harvest · −10 / window</div></div>
+        </div>
+        <div class="readout">
+          <div class="k">window</div><div class="v" id="f-win">—</div>
+          <div class="k">harvests</div><div class="v" id="f-harv">—</div>
+          <div class="k">track-error</div><div class="v" id="f-track">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--nutrient)"></i>nutrient (food)</span>
+      <span><i style="background:rgba(255,183,77,.35)"></i>chemical gradient</span>
+      <span><i style="background:var(--fuel)"></i>forager position</span>
+      <span>harvest = amber pulse · fuel 0 = starved</span>
+    </div>
+  </section>
+
+  <!-- THRESHOLDS -->
+  <section class="view" id="view-thresholds">
+    <h1 class="view-title">Thresholds</h1>
+    <p class="caption">Three sharp edges of viability: boundary upkeep (T*), repair (λ*), and foraging (v*).</p>
+    <div class="charts" id="t-charts"></div>
+    <div class="lower">
+      <div class="panel"><h3>Aliveness scorecard — Maturana &amp; Varela's six-point key</h3>
+        <div id="t-score"></div>
+        <div class="hint" style="margin-top:8px">1 boundary · 2 components · 3 mechanistic · 4 self-produced boundary · 5 boundary conditions dynamics · 6 closure</div></div>
+      <div class="panel"><h3>Milestone 1 — AI assembly vs clang ‑O3 (dynamic instructions)</h3>
+        <canvas id="t-bench" width="600" height="170"></canvas>
+        <div class="hint" style="margin-top:8px"><span style="color:var(--code)">■</span> C ‑O3 &nbsp; <span style="color:var(--repair)">■</span> AI asm &nbsp;·&nbsp; asm wins 6/10 speed, 8/10 size; one-shot 10/10 correct</div></div>
+    </div>
+  </section>
+
+  <!-- OVERVIEW -->
+  <section class="view" id="view-overview">
+    <h1 class="view-title" style="text-align:center">Software that has to keep itself alive</h1>
+    <p class="caption" style="text-align:center">Why a statue isn't alive, and how each death taught the next organism.</p>
+    <div class="eli5">
+      <p>Almost every program is a <b>statue</b>: you carve it once and it just sits there. We're building software more like a <b>living cell</b> — it must constantly rebuild its own parts, or it falls apart. Being alive isn't a thing you <i>are</i>, it's a thing you <i>keep doing</i>.</p>
+      <p>So we made a sealed world where anything not constantly rewritten <b>dissolves</b> — like writing in sand while the tide washes over it. A normal program dies instantly; our organisms redraw their bodies faster than the tide erases them.</p>
+    </div>
+    <div class="ladder" id="o-ladder"></div>
+  </section>
+</div>
+<script src="app.js"></script>
+</body></html>

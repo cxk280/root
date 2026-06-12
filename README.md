@@ -83,6 +83,11 @@ the first few rungs of that ladder, built carefully and tested honestly.
   a bandwidth **v\* ≈ 1.2 steps/window**; the non-sensing `forager_sweep` starves
   at every speed. Sensing, not motion, is what makes it foraging.
   (`results/protocell/RUNG2C.md`.)
+- ✅ **Live visualizer.** A browser app (`viz/`) that streams the contained
+  medium over Server-Sent Events so you can *watch* it: an organism corrupted and
+  repaired in its arena (dying and reborn on a loop), the colony's heads keeping
+  one genome alive, the forager chemotaxing to a drifting nutrient, and the
+  T\*/λ\*/v\* thresholds. `python3 -m viz.server`. (`viz/README.md`, `VIEWS.md`.)
 - ✅ **Safety hardening.** Containment is first-class: privileged instructions
   trap (C1), all organism emulation runs in an isolated resource-capped worker
   (C2), the toolchain is pinned/recorded (C5), and the whole rig runs inside a
@@ -120,6 +125,8 @@ organisms/<name>/       organism.s (+ membrane.json). rock, blind, protocell0;
                         protocell1/2 = TMR error correction; forager0/sweep = chemotaxis
 
 scripts/                score.py, report.py, life.py, redundancy.py, forage.py
+viz/                    live web visualizer — server.py (SSE) + scenes.py + static/
+VIEWS.md                verbal spec of every visualizer view (mocks-first rule)
 results/                RESULTS.md; protocell/RESULTS.md, RUNG2.md, RUNG2B.md, RUNG2C.md
 ```
 
@@ -138,8 +145,11 @@ brew install unicorn capstone          # the C libraries the shim binds
 .venv/bin/python scripts/score.py --all && .venv/bin/python scripts/report.py
 
 # Phase 2 — the living organisms
-.venv/bin/python -m medium.selftest    # 16 medium self-tests (the aliveness assay)
+.venv/bin/python -m medium.selftest    # 18 medium self-tests (the aliveness assay)
 .venv/bin/python scripts/life.py       # run the assay; writes results/protocell/
+
+# Watch it live (browser)
+.venv/bin/python -m viz.server         # → http://127.0.0.1:8808
 
 # Safety / containment
 .venv/bin/python -m harness.containment        # the sandbox walls hold (C1)
